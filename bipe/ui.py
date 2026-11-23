@@ -645,7 +645,7 @@ class Window(Adw.ApplicationWindow):
         return False
 
     def about(self):
-        Adw.AboutDialog(application_name='Bipe', application_icon=APP_ID, version=VERSION, developer_name='Colaboradores do Bipe', license_type=Gtk.License.GPL_3_0, comments='Um caixa simples, local e sem complicação.\nEmite comprovantes não fiscais.').present(self)
+        Adw.AboutDialog(application_name='Bipe', application_icon=APP_ID, version=VERSION, developer_name='Ricardo Pompeu', license_type=Gtk.License.GPL_3_0, comments='Um caixa simples, local e sem complicação.\nEmite comprovantes não fiscais.').present(self)
 
 
 class Application(Adw.Application):

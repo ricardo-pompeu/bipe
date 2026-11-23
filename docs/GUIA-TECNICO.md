@@ -137,3 +137,28 @@ O identificador `io.github.ricardo_pompeu.Bipe` corresponde ao projeto [ricardo-
 O ícone mostra uma impressora térmica azul com o papel saindo pela frente, com uma sombra de contato discreta e formas que se mantêm legíveis em tamanhos pequenos. É um SVG original em grade de 128 × 128 px, com base em 112 px, perfil inferior de 4 px, paleta GNOME e formas simples sem sombras externas. A versão simbólica em 16 × 16 px é monocromática e recebe a cor do tema pelo GTK. Ambos são instalados no tema hicolor pelo Meson e incluídos no Flatpak.
 
 Referências: [GNOME HIG — App Icons](https://developer.gnome.org/hig/guidelines/app-icons.html) e [UI Icons](https://developer.gnome.org/hig/guidelines/ui-icons.html). A arte não implica participação ou certificação no GNOME Circle.
+
+## Informações da GNOME Software e assinatura
+
+O pacote de distribuição inclui um catálogo AppStream composto dentro do SDK, com nome, descrição, licença, responsável e ícones rasterizados. As três capturas são janelas reais do Bipe com produtos de demonstração em banco temporário. Apenas essas imagens ficam no repositório público [bipe-media](https://github.com/ricardo-pompeu/bipe-media); o código continua no repositório privado. Os endereços das imagens fixam o commit da publicação.
+
+A composição usa o serviço Flatpak para um sandbox auxiliar do carregador de imagens. Essa permissão só existe durante a construção; as permissões do aplicativo instalado não foram ampliadas. `scripts/verificar-bundle.py` confere que o catálogo e os ícones realmente entraram no arquivo distribuído.
+
+O pacote é assinado com a chave de distribuição do Bipe. Impressão digital:
+
+```text
+6C5D 151C 77B1 32C6 F4D1 8FC0 5F6B 9FFE 309A DBD1
+```
+
+Os lançamentos oferecem `Bipe-signing-key.asc`, `SHA256SUMS` e `SHA256SUMS.asc`. Para conferência manual:
+
+```sh
+gpg --import Bipe-signing-key.asc
+gpg --fingerprint 6C5D151C77B132C6F4D18FC05F6B9FFE309ADBD1
+gpg --verify SHA256SUMS.asc SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS
+```
+
+Compare a impressão digital com uma fonte já confiável antes de aceitar a chave pela primeira vez. Uma chave entregue junto do próprio pacote não prova, sozinha, a identidade civil do autor. A assinatura verifica a integridade e a continuidade entre os lançamentos assinados com a mesma chave; não concede selo de verificação do Flathub ou aprovação do GNOME.
+
+A chave secreta fica em `~/.local/share/bipe-release-signing`, fora do projeto, com acesso restrito ao proprietário. O mantenedor deve guardar uma cópia privada e segura dessa pasta e do certificado de revogação. Nunca envie seu conteúdo para GitHub ou para os usuários. O empacotamento exige essa chave; máquinas de desenvolvimento podem criar pacotes locais não assinados com `scripts/build-flatpak.sh`.

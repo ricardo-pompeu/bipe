@@ -48,4 +48,4 @@ O Bipe emite **comprovantes não fiscais**.
 
 ---
 
-[Instalação e migração de dados](INSTALACAO.md) · [Guia técnico](docs/GUIA-TECNICO.md) · [Testes](TESTES.md) · [Licença GPL](LICENSE)
+[Instalação e migração de dados](INSTALACAO.md) · [Guia técnico](docs/GUIA-TECNICO.md) · [Testes](TESTES.md) · [Autenticidade do pacote](docs/GUIA-TECNICO.md#informações-da-gnome-software-e-assinatura) · [Licença GPL](LICENSE)
