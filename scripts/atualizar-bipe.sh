@@ -33,5 +33,9 @@ if ! flatpak info "--$scope" "$runtime" >/dev/null 2>&1; then
     flatpak remote-add "--$scope" --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
     flatpak install "--$scope" --noninteractive flathub "$runtime"
 fi
-flatpak install "--$scope" --bundle --or-update --noninteractive "$bundle"
+if [ "$installed" = true ]; then
+    flatpak install "--$scope" --bundle --or-update --noninteractive --reinstall "$bundle"
+else
+    flatpak install "--$scope" --bundle --or-update --noninteractive "$bundle"
+fi
 echo 'Pronto. Feche e abra o Bipe para usar a versão instalada.'

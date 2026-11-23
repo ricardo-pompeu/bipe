@@ -49,3 +49,4 @@ elif name == 'flatpak':
                     target = 'system' if scope == 'system' else 'user'
                     self.assertIn(f'install --{target} --bundle --or-update --noninteractive', calls)
                     self.assertNotIn('lpadmin', calls)
+                    self.assertEqual('--reinstall' in calls, scope != 'fresh')
