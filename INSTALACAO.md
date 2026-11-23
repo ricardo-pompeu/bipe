@@ -2,7 +2,7 @@
 
 ## Instalação automática com a POS-80 USB
 
-Baixe o kit `Bipe-POS80-linux-x86_64.tar.gz` nos **Assets** da [versão 0.4.0](https://github.com/ricardo-pompeu/bipe/releases/tag/v0.4.0). Ele inclui o Bipe, o instalador e o checksum. O repositório é privado e requer uma conta com acesso.
+Baixe o kit `Bipe-POS80-linux-x86_64.tar.gz` nos **Assets** da [versão mais recente](https://github.com/ricardo-pompeu/bipe/releases/latest). Ele inclui o Bipe, o instalador e o checksum. O repositório é privado e requer uma conta com acesso.
 
 1. Copie o kit para o computador novo e extraia o arquivo.
 2. Ligue a **POS-80** e conecte o cabo USB.
@@ -58,3 +58,19 @@ O Bipe 0.4.0 usa um novo identificador Flatpak. Feche o aplicativo antigo antes 
 O migrador copia o banco SQLite com produtos, vendas e preferências. Mantém o original e nunca substitui um banco já criado no novo aplicativo. Se você já abriu a nova versão, use **Exportar backup** na antiga e **Restaurar backup** na nova, após conferir que pode substituir os dados atuais. A fila CUPS é compartilhada pelo sistema e continua disponível.
 
 Depois de conferir os dados no Bipe, remova a instalação antiga com `flatpak uninstall --user io.github.caixasimples.CaixaSimples`, sem passar `--delete-data`. Os backups antigos continuam na pasta de dados anterior. Se usava o atalho antigo no dock, fixe o novo Bipe.
+
+
+## Atualizar uma instalação do Bipe
+
+1. Feche o Bipe. Não o desinstale.
+2. Baixe o novo `Bipe.flatpak` pelo site e abra-o no instalador de aplicativos do Linux. Confirme a atualização da instalação existente.
+3. Se estiver usando o kit, extraia a nova cópia e execute `sh instalar-bipe.sh` ou `sh atualizar-bipe.sh`. O atualizador não precisa da impressora conectada.
+4. Abra o Bipe novamente. Os produtos, as vendas e as preferências permanecem no mesmo banco local.
+
+Para instalações feitas para o seu usuário pelo kit, a alternativa pelo terminal é:
+
+```sh
+flatpak install --user --bundle --or-update ./Bipe.flatpak
+```
+
+O script detecta instalações para o usuário ou para o sistema e atualiza no mesmo local. Se encontrar ambas, pede que você resolva a duplicação em vez de escolher silenciosamente uma delas. A migração do identificador anterior continua sendo necessária apenas para versões anteriores a 0.4.0.

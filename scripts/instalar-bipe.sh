@@ -8,13 +8,13 @@ fail() { printf 'Erro: %s\n' "$*" >&2; exit 1; }
 mode=${1:-}
 case "$mode" in
     '') ;;
-    --so-impressora|--verificar) ;;
-    --help) printf '%s\n' 'Uso: sh instalar-bipe.sh [--so-impressora | --verificar]' 'Sem opção: configura a POS-80 e instala o Flatpak ao lado do script.'; exit 0 ;;
+    --so-impressora|--verificar|--so-aplicativo) ;;
+    --help) printf '%s\n' 'Uso: sh instalar-bipe.sh [--so-impressora | --verificar | --so-aplicativo]' 'Sem opção: configura a POS-80 e instala o Flatpak ao lado do script.'; exit 0 ;;
     *) fail 'Use --help para ver as opções.' ;;
 esac
 [ "$#" -le 1 ] || fail 'Use apenas uma opção.'
 [ "$(uname -s)" = Linux ] || fail 'O instalador é para Linux.'
-if [ "$mode" = '' ]; then
+if [ "$mode" = '' ] || [ "$mode" = --so-aplicativo ]; then
     [ "$(uname -m)" = x86_64 ] || fail 'Este pacote Flatpak é para Linux x86_64. Use --so-impressora para configurar somente a fila.'
     [ "$(id -u)" != 0 ] || fail 'Execute sem sudo. O instalador pedirá autorização apenas quando necessário.'
     folder=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -22,6 +22,19 @@ if [ "$mode" = '' ]; then
     [ -r "$bundle" ] || fail 'Coloque Bipe.flatpak na mesma pasta do instalador.'
     if [ -f "$folder/SHA256SUMS" ]; then
         (cd "$folder" && sha256sum -c SHA256SUMS)
+    fi
+fi
+
+# Atualizações não precisam da impressora ligada nem reconfiguram a fila.
+if [ "$mode" = '' ] || [ "$mode" = --so-aplicativo ]; then
+    if [ "$mode" = --so-aplicativo ]; then
+        exec sh "$folder/atualizar-bipe.sh"
+    fi
+    if command -v flatpak >/dev/null 2>&1; then
+        if flatpak info --user io.github.ricardo_pompeu.Bipe/x86_64/master >/dev/null 2>&1 ||
+           flatpak info --system io.github.ricardo_pompeu.Bipe/x86_64/master >/dev/null 2>&1; then
+            exec sh "$folder/atualizar-bipe.sh"
+        fi
     fi
 fi
 
@@ -98,7 +111,7 @@ if [ "$mode" = '' ]; then
         flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
         flatpak install --user --noninteractive flathub "$runtime"
     fi
-    flatpak install --user --noninteractive "$bundle"
+    sh "$folder/atualizar-bipe.sh"
     if [ -f "$HOME/.var/app/io.github.caixasimples.CaixaSimples/data/io.github.caixasimples.CaixaSimples/caixa.sqlite3" ]; then
         if ! command -v python3 >/dev/null 2>&1; then
             if command -v dnf >/dev/null 2>&1; then admin dnf install python3

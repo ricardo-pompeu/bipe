@@ -18,6 +18,26 @@ A aba **Fechamento** mostra as unidades vendidas no dia, a quantidade de produto
 
 **Não emite documentos fiscais.** Os papéis são identificados como comprovantes não fiscais.
 
+## Instalar e atualizar pelo site
+
+Baixe **Bipe.flatpak**, abra o arquivo e confirme a instalação ou atualização no instalador de aplicativos do Linux. O pacote mantém o identificador `io.github.ricardo_pompeu.Bipe` e o canal `master`, inclusive nos patches. Não desinstale o Bipe para atualizar. O suporte à abertura gráfica depende da integração Flatpak do gerenciador de aplicativos da distribuição.
+
+Se você usa o kit POS-80, extraia a nova cópia e execute `sh instalar-bipe.sh`. Quando o Bipe já está instalado, o script atualiza a mesma instalação e dispensa a configuração da impressora. Também há `sh atualizar-bipe.sh`, que instala ou atualiza apenas o aplicativo. Feche o Bipe antes de atualizar e abra-o novamente depois.
+
+### Preparar uma versão para o botão Baixar
+
+Execute `sh scripts/empacotar-site.sh` no ambiente de desenvolvimento com o SDK GNOME 50 instalado. O comando constrói o Flatpak, executa os testes e gera em `dist/`:
+
+- `Bipe.flatpak`: arquivo para instalar ou atualizar.
+- `Bipe-POS80-linux-x86_64.tar.gz`: kit completo para o aplicativo e a impressora.
+- `SHA256SUMS`: hashes dos dois arquivos.
+
+Publique os arquivos no seu site mantendo os mesmos endereços a cada versão, por exemplo `/downloads/Bipe.flatpak`. O botão **Baixar para Linux** deve apontar para esse arquivo; o kit pode ter um botão **Instalar com impressora POS-80**. Configure o servidor para revalidar o cache desses downloads quando eles forem substituídos.
+
+Não mude o identificador nem o canal nos patches. O nome e a versão de lançamento ficam nos metadados. A instalação para usuário/sistema também deve ser mantida: o script a detecta e evita criar uma segunda instalação. A migração do antigo identificador é uma exceção única, descrita no guia de instalação.
+
+O GitHub deste projeto é privado. Um link de download do GitHub exige autenticação; para downloads públicos pelo site, hospede esses arquivos no próprio site ou em armazenamento público. O site ainda precisa receber os arquivos: este repositório prepara os pacotes, mas não configura a hospedagem. Este fluxo atualiza após o usuário baixar e instalar; não é um serviço de atualização em segundo plano.
+
 ## Instalar pelo Flatpak
 
 ### Configurar a impressora POS-80 USB
@@ -55,7 +75,7 @@ Alternativa sem flatpak-builder, quando `org.gnome.Sdk//50` e `org.gnome.Platfor
 ./scripts/build-flatpak.sh
 ```
 
-O script exige diretórios de construção/repositório ainda não existentes. Outros caminhos podem ser passados como primeiro e segundo argumentos. O manifesto também pode ser aberto no GNOME Builder. Não há permissão de rede nem acesso geral ao diretório pessoal: arquivos são escolhidos pelos portais nativos.
+O script exige diretórios de construção/repositório ainda não existentes. Outros caminhos podem ser passados como primeiro e segundo argumentos. O manifesto também pode ser aberto no GNOME Builder. Não há permissão de rede nem acesso geral ao diretório pessoal; arquivos são escolhidos pelos portais nativos. A impressão direta usa o soquete local do CUPS.
 
 ## Executar o código-fonte
 
