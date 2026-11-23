@@ -23,10 +23,10 @@ Se o app já estiver instalado, execute `sh instalar-bipe.sh --so-impressora` pa
 
 ## Instalação manual, sem preparação da impressora
 
-O pacote pronto é para **Linux de 64 bits (x86_64)**, como a maioria dos computadores Intel e AMD. No terminal, `uname -m` deve mostrar `x86_64`. Para Linux ARM, veja as instruções de compilação no [README](README.md).
+O pacote pronto é para **Linux de 64 bits (x86_64)**, como a maioria dos computadores Intel e AMD. No terminal, `uname -m` deve mostrar `x86_64`. Para Linux ARM, veja as instruções de compilação no [guia técnico](docs/GUIA-TECNICO.md).
 
 1. Instale o Flatpak, se ainda não estiver disponível. No Fedora: `sudo dnf install flatpak`. No Ubuntu ou Debian: `sudo apt install flatpak`.
-2. Abra a [página da versão 0.4.0 no GitHub](https://github.com/ricardo-pompeu/bipe/releases/tag/v0.4.0). Em **Assets**, baixe **Bipe.flatpak**. Como o repositório é privado, entre no GitHub com uma conta que tenha acesso.
+2. Abra a [página da versão mais recente](https://github.com/ricardo-pompeu/bipe/releases/latest). Em **Assets**, baixe **Bipe.flatpak**. Como o repositório é privado, entre no GitHub com uma conta que tenha acesso.
 3. Abra o terminal na pasta onde salvou o arquivo. Adicione o Flathub, instale o ambiente GNOME 50 e, por fim, instale o pacote:
 
    ```sh
