@@ -6,7 +6,7 @@
 
 Um caixa simples para sua loja. Cadastre produtos, venda e imprima comprovantes.
 
-### [⬇ Baixar Bipe para Linux](https://github.com/ricardo-pompeu/bipe/releases/latest/download/Bipe.flatpak)
+### [⬇ Baixar Bipe para Linux](https://ricardo-pompeu.github.io/bipe/Bipe.flatpakref)
 
 Linux de 64 bits (Intel/AMD) · Funciona offline após a instalação
 
@@ -15,14 +15,14 @@ Linux de 64 bits (Intel/AMD) · Funciona offline após a instalação
 ## Instalar e começar
 
 1. Clique em **Baixar Bipe para Linux**.
-2. Abra o arquivo **Bipe.flatpak** e confirme **Instalar** ou **Atualizar**.
+2. Abra **Bipe.flatpakref**, confirme a origem **Bipe** e clique em **Instalar**.
 3. Abra **Bipe** no menu de aplicativos.
 
 O Linux precisa ter suporte a Flatpak. Se o arquivo não abrir, veja o [passo a passo de instalação](INSTALACAO.md#instalação-manual-sem-preparação-da-impressora).
 
-**Já tem o Bipe?** Baixe o arquivo novamente para atualizar. Seus produtos, vendas e preferências são preservados. Feche o aplicativo antes de atualizar.
+**Atualizações:** depois de instalar por esse link, procure novas versões na loja de aplicativos do Linux. Os produtos, vendas e preferências são preservados. [Conectar uma instalação anterior](INSTALACAO.md#conectar-uma-instalação-anterior-à-origem-oficial).
 
-> O repositório é privado. Para baixar, entre no GitHub com uma conta que tenha acesso.
+O download é público. O catálogo e os pacotes são assinados pela distribuição do Bipe; o [código-fonte](https://github.com/ricardo-pompeu/bipe) também é público.
 
 ## Usar com a impressora POS-80
 
@@ -34,7 +34,7 @@ Extraia o kit, conecte a impressora por USB e abra o terminal na pasta extraída
 sh instalar-bipe.sh
 ```
 
-O instalador prepara a impressora e instala o Bipe. Se o Bipe já estiver instalado, ele atualiza o aplicativo. Para configurar somente a impressora, use `sh instalar-bipe.sh --so-impressora`. [Ver as instruções completas](INSTALACAO.md#instalação-automática-com-a-pos-80-usb).
+O instalador prepara a impressora e instala o Bipe. Se o Bipe já estiver instalado, ele atualiza o aplicativo. O kit também conecta o Bipe à origem de atualizações. Para configurar somente a impressora, use `sh instalar-bipe.sh --so-impressora`. [Ver as instruções completas](INSTALACAO.md#instalação-automática-com-a-pos-80-usb).
 
 ## No dia a dia
 

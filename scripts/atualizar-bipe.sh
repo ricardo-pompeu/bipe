@@ -38,4 +38,9 @@ if [ "$installed" = true ]; then
 else
     flatpak install "--$scope" --bundle --or-update --noninteractive "$bundle"
 fi
+if [ -f "$folder/conectar-repositorio-bipe.sh" ]; then
+    if ! sh "$folder/conectar-repositorio-bipe.sh"; then
+        echo 'O Bipe está instalado. A conexão para atualizações não foi concluída; execute conectar-repositorio-bipe.sh quando tiver internet.' >&2
+    fi
+fi
 echo 'Pronto. Feche e abra o Bipe para usar a versão instalada.'

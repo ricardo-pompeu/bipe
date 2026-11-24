@@ -15,7 +15,7 @@ mkdir -p "$out" "$work/Bipe-POS80"
 cp "$root/Bipe.flatpak" "$out/Bipe.flatpak"
 cp "$root/Bipe.flatpak" "$work/Bipe-POS80/"
 cp "$root"/scripts/instalar-bipe.sh "$root"/scripts/instalar-caixa-simples.sh \
-   "$root"/scripts/atualizar-bipe.sh "$root"/scripts/migrar-bipe.py \
+   "$root"/scripts/atualizar-bipe.sh "$root"/scripts/conectar-repositorio-bipe.sh "$root"/scripts/migrar-bipe.py \
    "$root/INSTALACAO.md" "$root/LICENSE" "$work/Bipe-POS80/"
 gpg --homedir "$BIPE_GPG_HOMEDIR" --batch --armor --export "$BIPE_GPG_KEY" > "$work/Bipe-POS80/Bipe-signing-key.asc"
 (cd "$work/Bipe-POS80" && sha256sum Bipe.flatpak > SHA256SUMS)
@@ -24,4 +24,6 @@ tar -czf "$out/Bipe-POS80-linux-x86_64.tar.gz" -C "$work" Bipe-POS80
 cp "$work/Bipe-POS80/Bipe-signing-key.asc" "$out/"
 (cd "$out" && sha256sum Bipe.flatpak Bipe-POS80-linux-x86_64.tar.gz > SHA256SUMS)
 gpg --homedir "$BIPE_GPG_HOMEDIR" --batch --yes --local-user "$BIPE_GPG_KEY" --armor --detach-sign "$out/SHA256SUMS"
+sh "$root/scripts/preparar-github-pages.sh" "$work/repo" "$out/github-pages"
+cp "$out/github-pages/Bipe.flatpakref" "$out/github-pages/Bipe.flatpakrepo" "$out/"
 printf '%s\n' 'Arquivos prontos em dist/. Publique-os no site substituindo os anteriores, sem mudar o endereço do botão Baixar.'

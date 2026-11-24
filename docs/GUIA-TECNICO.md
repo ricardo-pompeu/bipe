@@ -36,7 +36,7 @@ Publique os arquivos no seu site mantendo os mesmos endereços a cada versão, p
 
 Não mude o identificador nem o canal nos patches. O nome e a versão de lançamento ficam nos metadados. A instalação para usuário/sistema também deve ser mantida: o script a detecta e evita criar uma segunda instalação. A migração do antigo identificador é uma exceção única, descrita no guia de instalação.
 
-O GitHub deste projeto é privado. Um link de download do GitHub exige autenticação; para downloads públicos pelo site, hospede esses arquivos no próprio site ou em armazenamento público. O site ainda precisa receber os arquivos: este repositório prepara os pacotes, mas não configura a hospedagem. Este fluxo atualiza após o usuário baixar e instalar; não é um serviço de atualização em segundo plano.
+O GitHub deste projeto é público. Os downloads públicos e o catálogo ficam no GitHub Pages do próprio repositório. O catálogo é publicado na branch gh-pages. Este fluxo atualiza após o usuário baixar e instalar; não é um serviço de atualização em segundo plano.
 
 ## Instalar pelo Flatpak
 
@@ -140,9 +140,9 @@ Referências: [GNOME HIG — App Icons](https://developer.gnome.org/hig/guidelin
 
 ## Informações da GNOME Software e assinatura
 
-O pacote de distribuição inclui um catálogo AppStream composto dentro do SDK, com nome, descrição, licença, responsável e ícones rasterizados. As três capturas são janelas reais do Bipe com produtos de demonstração em banco temporário. Apenas essas imagens ficam no repositório público [bipe-media](https://github.com/ricardo-pompeu/bipe-media); o código continua no repositório privado. Os endereços das imagens fixam o commit da publicação.
+O pacote de distribuição inclui um catálogo AppStream composto dentro do SDK, com nome, descrição, licença, responsável e ícones rasterizados. As três capturas são janelas reais do Bipe com produtos de demonstração em banco temporário. As imagens atuais são servidas pelo GitHub Pages do próprio Bipe. O repositório bipe-media conserva as imagens usadas na versão 0.4.3. O código do Bipe também é público.
 
-A composição usa o serviço Flatpak para um sandbox auxiliar do carregador de imagens. Essa permissão só existe durante a construção; as permissões do aplicativo instalado não foram ampliadas. `scripts/verificar-bundle.py` confere que o catálogo e os ícones realmente entraram no arquivo distribuído.
+A composição usa libappstream para o catálogo e librsvg/Cairo para rasterizar o ícone, dentro do SDK. As permissões do aplicativo instalado não foram ampliadas. `scripts/verificar-bundle.py` confere que o catálogo e os ícones realmente entraram no arquivo distribuído.
 
 O pacote é assinado com a chave de distribuição do Bipe. Impressão digital:
 
@@ -162,3 +162,12 @@ sha256sum -c --ignore-missing SHA256SUMS
 Compare a impressão digital com uma fonte já confiável antes de aceitar a chave pela primeira vez. Uma chave entregue junto do próprio pacote não prova, sozinha, a identidade civil do autor. A assinatura verifica a integridade e a continuidade entre os lançamentos assinados com a mesma chave; não concede selo de verificação do Flathub ou aprovação do GNOME.
 
 A chave secreta fica em `~/.local/share/bipe-release-signing`, fora do projeto, com acesso restrito ao proprietário. O mantenedor deve guardar uma cópia privada e segura dessa pasta e do certificado de revogação. Nunca envie seu conteúdo para GitHub ou para os usuários. O empacotamento exige essa chave; máquinas de desenvolvimento podem criar pacotes locais não assinados com `scripts/build-flatpak.sh`.
+
+
+## Repositório Flatpak no GitHub Pages
+
+Endereço oficial: `https://ricardo-pompeu.github.io/bipe/`. O arquivo `Bipe.flatpakref` adiciona o catálogo ao fluxo de instalação da loja. O `Bipe.flatpakrepo` contém a chave pública. Tanto os commits do aplicativo quanto o resumo e os catálogos são assinados com a chave de distribuição.
+
+Após `sh scripts/empacotar-site.sh`, execute `sh scripts/publicar-github-pages.sh` para publicar os arquivos gerados em `dist/github-pages/`. O script mantém os objetos anteriores, adiciona os novos e atualiza a branch gh-pages. O GitHub Pages deve estar configurado para publicar a raiz dessa branch. A chave secreta nunca é copiada para essa pasta nem para o GitHub.
+
+Na GNOME Software 51.1, o fluxo de abertura de um bundle local refina as informações básicas sem carregar as capturas antes da instalação. O repositório oficial evita depender desse fluxo: a loja recebe o catálogo completo da origem. A assinatura comprova a integridade relativamente à chave; não substitui auditoria do código ou certificação de terceiros.

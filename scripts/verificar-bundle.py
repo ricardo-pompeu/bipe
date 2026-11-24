@@ -20,7 +20,12 @@ component = next(c for c in root.iter('component') if c.findtext('id') == 'io.gi
 assert component.findtext('name') == 'Bipe'
 assert component.findtext('developer/name') == 'Ricardo Pompeu'
 assert component.find('description/p') is not None
-assert len(component.findall('screenshots/screenshot')) == 3
+shots = component.findall('screenshots/screenshot')
+assert len(shots) == 3
+for shot in shots:
+    image = shot.find('image')
+    assert image is not None and image.text.startswith('https://'), 'Captura sem endereço HTTPS.'
+    assert int(image.get('width', '0')) >= 624 and int(image.get('height', '0')) >= 351
 for size in (64, 128):
     icon = bundle.get_icon(size)
     assert icon is not None and icon.get_data().startswith(b'\x89PNG'), f'Ícone {size} ausente.'

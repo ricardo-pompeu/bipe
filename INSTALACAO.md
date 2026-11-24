@@ -2,7 +2,7 @@
 
 ## Instalação automática com a POS-80 USB
 
-Baixe o kit `Bipe-POS80-linux-x86_64.tar.gz` nos **Assets** da [versão mais recente](https://github.com/ricardo-pompeu/bipe/releases/latest). Ele inclui o Bipe, o instalador e o checksum. O repositório é privado e requer uma conta com acesso.
+Baixe o kit `Bipe-POS80-linux-x86_64.tar.gz` nos **Assets** da [versão mais recente](https://github.com/ricardo-pompeu/bipe/releases/latest). Ele inclui o Bipe, o instalador e o checksum. O download é público e não exige login.
 
 1. Copie o kit para o computador novo e extraia o arquivo.
 2. Ligue a **POS-80** e conecte o cabo USB.
@@ -26,7 +26,7 @@ Se o app já estiver instalado, execute `sh instalar-bipe.sh --so-impressora` pa
 O pacote pronto é para **Linux de 64 bits (x86_64)**, como a maioria dos computadores Intel e AMD. No terminal, `uname -m` deve mostrar `x86_64`. Para Linux ARM, veja as instruções de compilação no [guia técnico](docs/GUIA-TECNICO.md).
 
 1. Instale o Flatpak, se ainda não estiver disponível. No Fedora: `sudo dnf install flatpak`. No Ubuntu ou Debian: `sudo apt install flatpak`.
-2. Abra a [página da versão mais recente](https://github.com/ricardo-pompeu/bipe/releases/latest). Em **Assets**, baixe **Bipe.flatpak**. Como o repositório é privado, entre no GitHub com uma conta que tenha acesso.
+2. Para instalar pela loja com capturas, informações da origem e atualizações, abra [Bipe.flatpakref](https://ricardo-pompeu.github.io/bipe/Bipe.flatpakref). Confirme a origem Bipe e instale. O pacote Bipe.flatpak das releases continua disponível como alternativa local.
 3. Abra o terminal na pasta onde salvou o arquivo. Adicione o Flathub, instale o ambiente GNOME 50 e, por fim, instale o pacote:
 
    ```sh
@@ -74,3 +74,15 @@ flatpak install --user --bundle --or-update ./Bipe.flatpak
 ```
 
 O script detecta instalações para o usuário ou para o sistema e atualiza no mesmo local. Se encontrar ambas, pede que você resolva a duplicação em vez de escolher silenciosamente uma delas. A migração do identificador anterior continua sendo necessária apenas para versões anteriores a 0.4.0.
+
+
+## Conectar uma instalação anterior à origem oficial
+
+Se você instalou o Bipe abrindo um arquivo `Bipe.flatpak`, conecte a instalação existente à distribuição oficial para receber o catálogo e as atualizações pela loja:
+
+1. Feche o Bipe.
+2. Baixe [conectar-repositorio-bipe.sh](https://ricardo-pompeu.github.io/bipe/conectar-repositorio-bipe.sh).
+3. Na pasta em que salvou o arquivo, execute `sh conectar-repositorio-bipe.sh`, sem sudo.
+4. Abra novamente o Bipe. Os produtos e vendas continuam no mesmo banco.
+
+O script mantém o mesmo usuário/sistema e o mesmo identificador. Ele adiciona a origem assinada **Bipe**, verifica o endereço do repositório e reinstala a mesma aplicação a partir dela. Não cria outro banco. A partir daí, a loja de aplicativos pode buscar as versões publicadas pelo mantenedor.

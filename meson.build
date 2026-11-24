@@ -1,4 +1,4 @@
-project('bipe', version: '0.4.3', meson_version: '>= 0.61.0', license: 'GPL-3.0-or-later')
+project('bipe', version: '0.4.4', meson_version: '>= 0.61.0', license: 'GPL-3.0-or-later')
 python = import('python').find_installation('python3')
 # Aplicação Python: valida o runtime sem exigir cabeçalhos C.
 run_command(python, '-c', 'import gi, cairo; gi.require_version("Gtk", "4.0"); gi.require_version("Adw", "1"); from gi.repository import Gtk, Adw; assert Gtk.get_minor_version() >= 14; assert Adw.get_minor_version() >= 5', check: true)
