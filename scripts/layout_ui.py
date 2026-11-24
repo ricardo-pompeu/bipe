@@ -29,7 +29,7 @@ with tempfile.TemporaryDirectory(prefix='bipe-layout-') as temporary:
         w = app.get_active_window()
         w.store.save_product('test', 'Produto de teste', 750, stock=5)
         w.refresh_products()
-        assert Gtk.IconTheme.get_for_display(w.get_display()).has_icon('dialog-information-symbolic')
+        assert Gtk.IconTheme.get_for_display(w.get_display()).has_icon('dialog-warning-symbolic')
         w.set_default_size(850, 490)
         step(empty)
     def check(name):

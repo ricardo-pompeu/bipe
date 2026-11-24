@@ -196,8 +196,9 @@ class Window(Adw.ApplicationWindow):
             edit.set_valign(Gtk.Align.CENTER)
             row.add_suffix(edit)
             if product.stock is not None and product.stock <= limit:
-                indicator = Gtk.Image(icon_name='dialog-information-symbolic', tooltip_text='Estoque baixo')
-                indicator.add_css_class('dim-label')
+                indicator = Gtk.Image(icon_name='dialog-warning-symbolic', tooltip_text='Estoque baixo — confira a quantidade disponível')
+                indicator.set_pixel_size(20)
+                indicator.add_css_class('warning')
                 row.add_prefix(indicator)
             self.product_list.append(row)
         self.refresh_stock_warning()
