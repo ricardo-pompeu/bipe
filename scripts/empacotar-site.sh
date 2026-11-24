@@ -22,8 +22,8 @@ gpg --homedir "$BIPE_GPG_HOMEDIR" --batch --armor --export "$BIPE_GPG_KEY" > "$w
 gpg --homedir "$BIPE_GPG_HOMEDIR" --batch --yes --local-user "$BIPE_GPG_KEY" --armor --detach-sign "$work/Bipe-POS80/SHA256SUMS"
 tar -czf "$out/Bipe-POS80-linux-x86_64.tar.gz" -C "$work" Bipe-POS80
 cp "$work/Bipe-POS80/Bipe-signing-key.asc" "$out/"
-(cd "$out" && sha256sum Bipe.flatpak Bipe-POS80-linux-x86_64.tar.gz > SHA256SUMS)
-gpg --homedir "$BIPE_GPG_HOMEDIR" --batch --yes --local-user "$BIPE_GPG_KEY" --armor --detach-sign "$out/SHA256SUMS"
 sh "$root/scripts/preparar-github-pages.sh" "$work/repo" "$out/github-pages"
 cp "$out/github-pages/Bipe.flatpakref" "$out/github-pages/Bipe.flatpakrepo" "$out/"
+(cd "$out" && sha256sum Bipe.flatpak Bipe-POS80-linux-x86_64.tar.gz Bipe.flatpakref Bipe.flatpakrepo > SHA256SUMS)
+gpg --homedir "$BIPE_GPG_HOMEDIR" --batch --yes --local-user "$BIPE_GPG_KEY" --armor --detach-sign "$out/SHA256SUMS"
 printf '%s\n' 'Arquivos prontos em dist/. Publique-os no site substituindo os anteriores, sem mudar o endereço do botão Baixar.'

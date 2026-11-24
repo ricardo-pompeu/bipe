@@ -69,3 +69,9 @@ A construção 0.2.0 passou nos 17 testes dentro do SDK GNOME 50. O pacote foi i
 A suíte de 25 testes passou no SDK GNOME 50. O compositor AppStream validou o metainfo e gerou o catálogo e os ícones. A API libflatpak verificou o catálogo extraído do próprio arquivo Bipe.flatpak, incluindo nome, responsável, descrição, três screenshots e ícones PNG de 64 e 128 px. A assinatura GPG de SHA256SUMS foi validada com a chave pública da distribuição e os hashes dos arquivos conferiram. As capturas foram geradas com dados de demonstração em banco temporário e não envolveram impressão.
 
 As imagens ficam no repositório público bipe-media por autorização do mantenedor; os URLs fixam o commit da publicação. A certificação de identidade do autor por terceiros não foi realizada e não é prometida pela assinatura.
+
+## Origem oficial no GitHub Pages — 0.4.4, 23/11/2026
+
+A origem HTTPS do próprio repositório foi adicionada ao Flatpak com verificação GPG ativa. O catálogo foi baixado pelo Flatpak e interpretado pela API AppStream: três capturas foram selecionadas para o tamanho usado na loja. O novo caminho de instalação é Bipe.flatpakref, que usa o catálogo da origem, em vez do fluxo limitado de abertura de um bundle local. A geração do catálogo usa libappstream e librsvg no SDK.
+
+A suíte de 25 testes e a verificação de metadados dentro do pacote passaram. Os commits do aplicativo, o catálogo e o resumo do repositório são assinados. Os scripts de publicação não copiam a chave secreta; apenas os artefatos públicos são enviados à branch gh-pages.
