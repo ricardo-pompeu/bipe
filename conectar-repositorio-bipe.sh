@@ -13,10 +13,17 @@ if flatpak info --system "$ref" >/dev/null 2>&1; then
 fi
 url='https://ricardo-pompeu.github.io/bipe/Bipe.flatpakrepo'
 flatpak remote-add "--$scope" --if-not-exists bipe "$url"
+remote_url=$(flatpak remotes "--$scope" --columns=name,url | awk '$1=="bipe" {print $2}')
+[ "$remote_url" = 'https://ricardo-pompeu.github.io/bipe/repo/' ] || { echo 'A origem bipe existente usa outro endereço; ela foi preservada.' >&2; exit 1; }
+flatpak remote-modify "--$scope" --gpg-verify bipe
 actual=$(flatpak remote-info "--$scope" --show-ref bipe "$ref")
 [ "$actual" = "app/$ref" ] || { echo 'O repositório não apresentou o identificador esperado.' >&2; exit 1; }
 if flatpak info "--$scope" "$ref" >/dev/null 2>&1; then
-    flatpak install "--$scope" --or-update --reinstall --noninteractive bipe "$ref"
+    if [ "$(flatpak info "--$scope" --show-origin "$ref")" = bipe ]; then
+        flatpak update "--$scope" --noninteractive "$ref"
+    else
+        flatpak install "--$scope" --or-update --reinstall --noninteractive bipe "$ref"
+    fi
 else
     flatpak install "--$scope" --or-update --noninteractive bipe "$ref"
 fi
