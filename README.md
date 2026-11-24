@@ -1,51 +1,29 @@
-<div align="center">
-
-<img src="data/bipe-icon-preview.png" width="128" height="128" alt="Ícone do Bipe">
+<img src="data/bipe-icon-preview.png" width="96" height="96" align="right" alt="">
 
 # Bipe
 
-Um caixa simples para sua loja. Cadastre produtos, venda e imprima comprovantes.
+Um caixa simples para pequenos comércios.
 
-### [⬇ Baixar Bipe para Linux](https://ricardo-pompeu.github.io/bipe/Bipe.flatpakref)
+Cadastre produtos, registre vendas e imprima comprovantes em um aplicativo nativo para GNOME. O Bipe funciona sem internet e mantém os dados no seu computador.
 
-Linux de 64 bits (Intel/AMD) · Funciona offline após a instalação
+![Uma venda no Bipe](data/screenshots/vender.png)
 
-</div>
+## Instalação
 
-## Instalar e começar
+[Instalar o Bipe](https://ricardo-pompeu.github.io/bipe/Bipe.flatpakref)
 
-1. Clique em **Baixar Bipe para Linux**.
-2. Abra **Bipe.flatpakref**, confirme a origem **Bipe** e clique em **Instalar**.
-3. Abra **Bipe** no menu de aplicativos.
+Abra o arquivo na loja de aplicativos do Linux e confirme a instalação. As próximas atualizações ficam disponíveis pela mesma loja.
 
-O Linux precisa ter suporte a Flatpak. Se o arquivo não abrir, veja o [passo a passo de instalação](INSTALACAO.md#instalação-manual-sem-preparação-da-impressora).
+O pacote é para Linux de 64 bits, em computadores Intel ou AMD, com suporte a Flatpak. Consulte o [guia de instalação](INSTALACAO.md) se precisar de ajuda ou quiser trazer os dados de outra máquina.
 
-**Atualizações:** depois de instalar por esse link, procure novas versões na loja de aplicativos do Linux. Os produtos, vendas e preferências são preservados. [Conectar uma instalação anterior](INSTALACAO.md#conectar-uma-instalação-anterior-à-origem-oficial).
+## Impressão
 
-O download é público. O catálogo e os pacotes são assinados pela distribuição do Bipe; o [código-fonte](https://github.com/ricardo-pompeu/bipe) também é público.
+O Bipe imprime comprovantes não fiscais e permite salvá-los em PDF.
 
-## Usar com a impressora POS-80
+Para usar uma POS-80 USB, o [kit de instalação](https://github.com/ricardo-pompeu/bipe/releases/latest/download/Bipe-POS80-linux-x86_64.tar.gz) inclui a configuração da impressora. Veja as [instruções para a POS-80](INSTALACAO.md#instalação-automática-com-a-pos-80-usb).
 
-[**⬇ Baixar Bipe com configuração da POS-80**](https://github.com/ricardo-pompeu/bipe/releases/latest/download/Bipe-POS80-linux-x86_64.tar.gz)
+## Desenvolvimento
 
-Extraia o kit, conecte a impressora por USB e abra o terminal na pasta extraída. Execute:
+Feito com Python, GTK 4, Libadwaita e SQLite. As instruções para executar, testar e empacotar estão no [guia técnico](docs/GUIA-TECNICO.md).
 
-```sh
-sh instalar-bipe.sh
-```
-
-O instalador prepara a impressora e instala o Bipe. Se o Bipe já estiver instalado, ele atualiza o aplicativo. O kit também conecta o Bipe à origem de atualizações. Para configurar somente a impressora, use `sh instalar-bipe.sh --so-impressora`. [Ver as instruções completas](INSTALACAO.md#instalação-automática-com-a-pos-80-usb).
-
-## No dia a dia
-
-- **Vender:** passe o produto no leitor ou digite o código. Escolha o pagamento e finalize.
-- **Produtos:** cadastre ou altere o nome e o preço.
-- **Fechamento:** veja as quantidades vendidas e os produtos mais vendidos do dia.
-
-O menu também oferece vendas recentes, reimpressão e backup.
-
-O Bipe emite **comprovantes não fiscais**.
-
----
-
-[Instalação e migração de dados](INSTALACAO.md) · [Guia técnico](docs/GUIA-TECNICO.md) · [Testes](TESTES.md) · [Autenticidade do pacote](docs/GUIA-TECNICO.md#informações-da-gnome-software-e-assinatura) · [Licença GPL](LICENSE)
+Distribuído sob a licença [GPL-3.0-or-later](LICENSE).
