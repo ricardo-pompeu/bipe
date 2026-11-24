@@ -78,8 +78,12 @@ A suíte de 25 testes e a verificação de metadados dentro do pacote passaram. 
 
 ## Estoque opcional e valores no fechamento — 0.5.0
 
-36 testes cobrem estoque desativado por padrão, baixa somente ao concluir a venda, idempotência, aviso no limite escolhido, saldo negativo sem bloquear venda, reposição/desativação, rollback conjunto de venda e estoque, backup/restauração e migração do esquema 1 para o 2. O fechamento soma os preços históricos de cada venda, inclusive quando o produto teve preços diferentes no mesmo dia.
+38 testes cobrem estoque desativado por padrão, baixa somente ao concluir a venda, idempotência, aviso no limite escolhido, saldo negativo sem bloquear venda, reposição/desativação, rollback conjunto de venda e estoque, backup/restauração e migração do esquema 1 para o 2. O fechamento soma os preços históricos de cada venda, inclusive quando o produto teve preços diferentes no mesmo dia.
 
 Os testes gráficos stock_ui.py, closing_ui.py e acceptance_ui.py passaram com banco temporário e impressão substituída por um backend de teste. Conferiram o formulário opcional, baixa, aviso, reimpressão sem novo desconto, reposição, calendário e valores. O formulário foi renderizado e revisado com o botão Salvar fixo. As capturas da loja foram atualizadas com dados de demonstração.
 
 Uma migração adicional foi executada em cópia consistente do banco local: produtos, vendas, itens e preferências foram comparados antes e depois. O banco original não foi alterado nessa verificação.
+
+## Simplificação do estoque e venda — 0.6.0
+
+`tests/test_stock.py` verifica campo vazio, zero, validação de inteiros e limite global persistido, independente dos antigos limites por produto. `scripts/stock_ui.py` percorre cadastro, venda, reposição, preferências e desativação pelo campo vazio. `scripts/layout_ui.py` confere leitor, total e ações dentro de janelas de 850×490 e 640×420, com alerta e carrinho rolável, e gera capturas em /tmp. Os testes de interface usam dados temporários e não imprimem.

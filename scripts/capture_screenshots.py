@@ -45,8 +45,8 @@ with tempfile.TemporaryDirectory(prefix='bipe-capturas-') as temp:
 
     def start():
         window = app.get_active_window()
-        rice = window.store.save_product('7891000000001', 'Arroz branco 1 kg', 750, stock=12, low_stock=3)
-        beans = window.store.save_product('7891000000002', 'Feijão carioca 1 kg', 890, stock=5, low_stock=2)
+        rice = window.store.save_product('7891000000001', 'Arroz branco 1 kg', 750, stock=12)
+        beans = window.store.save_product('7891000000002', 'Feijão carioca 1 kg', 890, stock=10)
         window.store.save_product('7891000000003', 'Café torrado 250 g', 1290)
         cart = Cart()
         for product in (rice, rice, beans):

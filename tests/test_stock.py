@@ -120,3 +120,28 @@ class StockTest(unittest.TestCase):
         for limit in (-1, True, 1.5):
             with self.subTest(limit=limit), self.assertRaises(ValueError):
                 self.store.save_product('x', 'Inválido', 100, low_stock=limit)
+
+    def test_blank_quantity_disables_and_zero_tracks(self):
+        from bipe.core import parse_stock
+        self.assertIsNone(parse_stock('  '))
+        self.assertEqual(parse_stock('0'), 0)
+        self.assertEqual(parse_stock('12'), 12)
+        self.assertEqual(parse_stock('-2'), -2)
+        for text in ('1,5', '1.5', '--2', 'abc', '٣', '1000000000'):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                parse_stock(text)
+
+    def test_global_limit_applies_to_all_products_and_is_saved(self):
+        self.assertEqual(self.store.stock_warning_limit, 5)
+        self.store.save_product('arroz', 'Arroz', 750, self.product.id, stock=6, low_stock=100)
+        self.store.save_product('feijao', 'Feijão', 890, stock=7, low_stock=0)
+        self.assertEqual(self.store.low_stock_products(), [])
+        self.store.configure(stock_warning_limit=7)
+        self.assertEqual(len(self.store.low_stock_products()), 2)
+        self.store.close()
+        self.store = Store(self.root / 'db.sqlite3')
+        self.assertEqual(self.store.stock_warning_limit, 7)
+        self.assertEqual(len(self.store.low_stock_products()), 2)
+        for limit in (-1, '5', 1.5, True):
+            with self.subTest(limit=limit), self.assertRaises(ValueError):
+                self.store.configure(stock_warning_limit=limit)

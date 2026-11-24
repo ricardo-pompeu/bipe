@@ -50,11 +50,9 @@ with tempfile.TemporaryDirectory(prefix='bipe-estoque-ui-') as temporary:
         window.scan.emit('activate')
         find(Adw.EntryRow, 'Nome do produto').set_text('Arroz 1 kg')
         find(Adw.EntryRow, 'Preço de venda (R$)').set_text('7,50')
-        assert not find(Adw.SpinRow, 'Quantidade disponível').get_visible()
-        find(Adw.SwitchRow, 'Acompanhar quantidade').set_active(True)
-        assert find(Adw.SpinRow, 'Quantidade disponível').get_visible()
-        find(Adw.SpinRow, 'Quantidade disponível').set_value(3)
-        find(Adw.SpinRow, 'Avisar quando restarem').set_value(2)
+        assert find(Adw.EntryRow, 'Quantidade disponível').get_text() == ''
+        find(Adw.EntryRow, 'Quantidade disponível').set_text('3')
+        assert window.store.stock_warning_limit == 5
         click('Salvar e adicionar')
         assert window.store.product('arroz').stock == 3
         step(checkout)
@@ -90,19 +88,28 @@ with tempfile.TemporaryDirectory(prefix='bipe-estoque-ui-') as temporary:
 
     def restock():
         window = app.get_active_window()
-        assert find(Adw.SpinRow, 'Quantidade disponível').get_value() == 1
-        find(Adw.SpinRow, 'Quantidade disponível').set_value(12)
+        assert find(Adw.EntryRow, 'Quantidade disponível').get_text() == '1'
+        find(Adw.EntryRow, 'Quantidade disponível').set_text('12')
         click('Salvar')
         assert not window.stock_banner.get_revealed()
+        window.preferences()
+        step(configure_limit)
+
+    def configure_limit():
+        window = app.get_active_window()
+        find(Adw.SpinRow, 'Avisar quando restarem').set_value(15)
+        click('Salvar preferências')
+        assert window.store.stock_warning_limit == 15
+        assert window.stock_banner.get_revealed()
         step(disable)
 
     def disable():
         window = app.get_active_window()
         window.product_dialog(product=window.store.product('arroz'))
-        find(Adw.SwitchRow, 'Acompanhar quantidade').set_active(False)
+        find(Adw.EntryRow, 'Quantidade disponível').set_text('')
         click('Salvar')
         assert window.store.product('arroz').stock is None
-        print('PASS: estoque opcional, venda, baixa única, alerta, reimpressão, fechamento em reais, reposição e desativação.')
+        print('PASS: campo de estoque vazio, venda, alerta simbólico, fechamento, reposição, limite global e desativação por campo vazio.')
         app.quit()
 
     def exception_hook(kind, value, tb):

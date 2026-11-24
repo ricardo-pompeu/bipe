@@ -9,7 +9,7 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gio, GLib
 from . import APP_ID, VERSION
-from .core import Store, Cart, money, parse_money, change_due
+from .core import Store, Cart, money, parse_money, parse_stock, change_due
 from .receipt import Printer, render_pdf, receipt_lines
 
 
@@ -115,34 +115,44 @@ class Window(Adw.ApplicationWindow):
         dialog.present(self)
 
     def build_sale(self):
-        content = margins(box(16), 24)
+        content = margins(box(12), 18)
         clamp = Adw.Clamp(maximum_size=850, child=content)
-        content.append(label('Nova venda', 'title-1', xalign=0))
-        self.scan = Gtk.Entry(placeholder_text='Escaneie ou digite o código e pressione Enter', hexpand=True)
+        header = box(8)
+        header.append(label('Nova venda', 'title-2', xalign=0))
+        self.scan = Gtk.Entry(placeholder_text='Leia ou digite o código e pressione Enter', hexpand=True)
         self.scan.update_property([Gtk.AccessibleProperty.LABEL], ['Código de barras para adicionar à venda'])
         self.scan.connect('activate', self.scanned)
-        content.append(self.scan)
-        content.append(label('Pronto para receber produtos', 'dim-label', xalign=0))
+        header.append(self.scan)
+        content.append(header)
+
         self.cart_list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
         self.cart_list.add_css_class('boxed-list')
-        self.empty_cart = Adw.StatusPage(icon_name='document-new-symbolic', title='Comece uma venda', description='Passe o primeiro produto no leitor.\nSe ele for novo, você poderá cadastrá-lo na hora.')
+        self.empty_cart = margins(box(8), 12)
+        self.empty_cart.set_valign(Gtk.Align.CENTER)
+        self.empty_cart.append(label('Nenhum produto nesta venda', 'title-3', wrap=True))
+        self.empty_cart.append(label('Passe um produto no leitor para começar.', 'dim-label', wrap=True))
         self.cart_views = Gtk.Stack(vexpand=True)
-        self.cart_views.add_named(self.empty_cart, 'empty')
+        self.cart_views.add_named(scroll(self.empty_cart), 'empty')
         self.cart_views.add_named(scroll(self.cart_list), 'items')
         content.append(self.cart_views)
+
+        footer = box(10)
         totals = box(horizontal=True)
         totals.append(label('Total', 'title-3', hexpand=True, xalign=0))
         self.total = label(money(0), 'title-1')
         totals.append(self.total)
-        content.append(totals)
-        self.finish = button('Finalizar venda', self.checkout, 'suggested-action')
-        self.finish.add_css_class('pill')
-        self.finish.set_size_request(-1, 48)
-        self.finish.set_sensitive(False)
-        content.append(self.finish)
+        footer.append(totals)
+        actions = box(12, horizontal=True)
         self.cancel = button('Cancelar venda', self.cancel_sale, 'flat')
         self.cancel.set_sensitive(False)
-        content.append(self.cancel)
+        actions.append(self.cancel)
+        self.finish = button('Finalizar venda', self.checkout, 'suggested-action')
+        self.finish.set_hexpand(True)
+        self.finish.set_size_request(-1, 46)
+        self.finish.set_sensitive(False)
+        actions.append(self.finish)
+        footer.append(actions)
+        content.append(footer)
         self.stack.add_titled_with_icon(clamp, 'sell', 'Vender', 'document-new-symbolic')
 
     def build_products(self):
@@ -166,7 +176,8 @@ class Window(Adw.ApplicationWindow):
     def refresh_products(self):
         clear_list(self.product_list)
         products = self.store.products(self.search.get_text())
-        products.sort(key=lambda p: 0 if p.stock is not None and p.stock <= p.low_stock else 1)
+        limit = self.store.stock_warning_limit
+        products.sort(key=lambda p: 0 if p.stock is not None and p.stock <= limit else 1)
         self.products_empty.set_title('Nenhum produto encontrado' if self.search.get_text() else 'Seus produtos ficam aqui')
         self.product_views.set_visible_child_name('list' if products else 'empty')
         for product in products:
@@ -175,7 +186,7 @@ class Window(Adw.ApplicationWindow):
                 subtitle += f' · Estoque: {product.stock} un.'
                 if product.stock < 0:
                     subtitle += ' · Confira a quantidade'
-                elif product.stock <= product.low_stock:
+                elif product.stock <= limit:
                     subtitle += ' · Poucas unidades'
             row = Adw.ActionRow(title=product.name, subtitle=subtitle)
             row.set_use_markup(False)
@@ -183,9 +194,9 @@ class Window(Adw.ApplicationWindow):
             edit = button('Editar produto', lambda p=product: self.product_dialog(product=p), icon='document-edit-symbolic')
             edit.set_valign(Gtk.Align.CENTER)
             row.add_suffix(edit)
-            if product.stock is not None and product.stock <= product.low_stock:
-                indicator = Gtk.Image(icon_name='dialog-warning-symbolic', tooltip_text='Quantidade baixa; confira o estoque')
-                indicator.add_css_class('warning')
+            if product.stock is not None and product.stock <= limit:
+                indicator = Gtk.Image(icon_name='dialog-information-symbolic', tooltip_text='Estoque baixo')
+                indicator.add_css_class('dim-label')
                 row.add_prefix(indicator)
             self.product_list.append(row)
         self.refresh_stock_warning()
@@ -294,32 +305,17 @@ class Window(Adw.ApplicationWindow):
         inner.append(group)
         stock_group = Adw.PreferencesGroup(title='Estoque (opcional)',
             description='A quantidade diminui ao concluir uma venda. O aviso não impede vender.')
-        track = Adw.SwitchRow(title='Acompanhar quantidade', active=product is not None and product.stock is not None)
-        quantity = Adw.SpinRow(title='Quantidade disponível',
-            adjustment=Gtk.Adjustment(lower=-999999999, upper=999999999, step_increment=1, page_increment=10),
-            digits=0, numeric=True)
-        quantity.set_value(product.stock if product and product.stock is not None else 0)
-        threshold = Adw.SpinRow(title='Avisar quando restarem',
-            adjustment=Gtk.Adjustment(lower=0, upper=999999999, step_increment=1, page_increment=5),
-            digits=0, numeric=True)
-        threshold.set_value(product.low_stock if product else 5)
-        for row in (track, quantity, threshold):
-            stock_group.add(row)
-        def stock_visibility(*_):
-            quantity.set_visible(track.get_active())
-            threshold.set_visible(track.get_active())
-        track.connect('notify::active', stock_visibility)
-        stock_visibility()
+        quantity = Adw.EntryRow(title='Quantidade disponível', text=str(product.stock) if product and product.stock is not None else '')
+        quantity.set_input_purpose(Gtk.InputPurpose.NUMBER)
+        stock_group.set_description('Deixe vazio para não acompanhar. Ao informar uma quantidade, as vendas passam a descontá-la.')
+        stock_group.add(quantity)
         inner.append(stock_group)
         error_label = label('', 'error', wrap=True)
         error_label.set_visible(False)
         def save():
             try:
-                if track.get_active() and (not quantity.get_value().is_integer() or not threshold.get_value().is_integer()):
-                    raise ValueError('Informe quantidades inteiras, sem casas decimais.')
                 saved = self.store.save_product(code.get_text(), name.get_text(), parse_money(price.get_text()), product.id if product else None,
-                    stock=int(quantity.get_value()) if track.get_active() else None,
-                    low_stock=int(threshold.get_value()))
+                    stock=parse_stock(quantity.get_text()))
                 self.refresh_products()
                 if add:
                     self.add_product(saved)
@@ -336,6 +332,7 @@ class Window(Adw.ApplicationWindow):
         code.connect('entry-activated', lambda *_: name.grab_focus())
         name.connect('entry-activated', lambda *_: price.grab_focus())
         price.connect('entry-activated', lambda *_: save())
+        quantity.connect('entry-activated', lambda *_: save())
         dialog.connect('closed', lambda *_: self.focus_scan())
         dialog.present(self)
         (name if barcode else code).grab_focus()
@@ -597,6 +594,13 @@ class Window(Adw.ApplicationWindow):
         group.add(name)
         group.add(footer)
         page.add(group)
+        stock_group = Adw.PreferencesGroup(title='Estoque', description='O mesmo limite vale para todos os produtos com quantidade informada.')
+        stock_limit = Adw.SpinRow(title='Avisar quando restarem',
+            adjustment=Gtk.Adjustment(lower=0, upper=999999999, step_increment=1, page_increment=5),
+            digits=0, numeric=True)
+        stock_limit.set_value(self.store.stock_warning_limit)
+        stock_group.add(stock_limit)
+        page.add(stock_group)
         printer_group = Adw.PreferencesGroup(title='Impressora', description='O Bipe procura térmicas configuradas no Linux. A largura é detectada quando a fila informa ou identifica a bobina.')
         choices = ['auto', 'system']
         destination = Adw.ComboRow(title='Impressora dos comprovantes')
@@ -659,11 +663,14 @@ class Window(Adw.ApplicationWindow):
         page.add(appearance)
         def save():
             try:
-                self.store.configure(store=name.get_text().strip()[:200] or 'Meu estabelecimento', footer=footer.get_text().strip()[:300], local_printer=choices[destination.get_selected()], auto_cut=int(cut.get_active()), width=58 if width.get_selected() == 0 else 80)
+                if not stock_limit.get_value().is_integer():
+                    raise ValueError('Informe um limite de estoque inteiro.')
+                self.store.configure(stock_warning_limit=int(stock_limit.get_value()), store=name.get_text().strip()[:200] or 'Meu estabelecimento', footer=footer.get_text().strip()[:300], local_printer=choices[destination.get_selected()], auto_cut=int(cut.get_active()), width=58 if width.get_selected() == 0 else 80)
                 self.printer.set_paper(58 if width.get_selected() == 0 else 80)
+                self.refresh_products()
                 self.notify('Preferências salvas')
                 dialog.close()
-            except sqlite3.Error as error:
+            except (ValueError, sqlite3.Error) as error:
                 self.error('Não foi possível salvar as preferências', error)
         group.add(button('Salvar preferências', save, 'suggested-action'))
         dialog.present(self)

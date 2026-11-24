@@ -16,7 +16,7 @@ Abra o arquivo na loja de aplicativos do Linux e confirme a instalação. As pr�
 
 O pacote é para Linux de 64 bits, em computadores Intel ou AMD, com suporte a Flatpak. Consulte o [guia de instalação](INSTALACAO.md) se precisar de ajuda ou quiser trazer os dados de outra máquina.
 
-Em **Produtos**, você pode acompanhar a quantidade disponível e receber avisos de poucas unidades. O **Fechamento** mostra quanto cada produto vendeu e o total do dia.
+Em **Produtos**, preencha a quantidade para acompanhar o estoque ou deixe vazia para não acompanhar. O aviso de poucas unidades começa em 5 e pode ser ajustado nas preferências. O **Fechamento** mostra quanto cada produto vendeu e o total do dia.
 
 ## Impressão
 

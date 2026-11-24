@@ -6,6 +6,7 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 import os
+import re
 import sqlite3
 import unicodedata
 import uuid
@@ -35,6 +36,15 @@ def parse_money(text):
         return int(cents)
     except InvalidOperation:
         raise ValueError('Informe o preço, por exemplo: 7,50.') from None
+
+
+def parse_stock(text):
+    text = text.strip()
+    if not text:
+        return None
+    if not re.fullmatch(r'-?[0-9]{1,9}', text):
+        raise ValueError('Informe uma quantidade inteira ou deixe o campo vazio.')
+    return int(text)
 
 
 def normalized(text):
@@ -200,15 +210,27 @@ class Store:
             raise ValueError('Este código já está cadastrado. Procure o produto na lista.') from None
         return self.product(barcode)
 
+    @property
+    def stock_warning_limit(self):
+        try:
+            value = int(self.get('stock_warning_limit', '5'))
+            return value if 0 <= value <= MAX_UNITS else 5
+        except ValueError:
+            return 5
+
     def low_stock_products(self):
         return [Product(**dict(row)) for row in self.db.execute(
-            'SELECT * FROM products WHERE stock IS NOT NULL AND stock<=low_stock ORDER BY stock,name COLLATE NOCASE')]
+            'SELECT * FROM products WHERE stock IS NOT NULL AND stock<=? ORDER BY stock,name COLLATE NOCASE', (self.stock_warning_limit,))]
 
     def get(self, key, default=''):
         row = self.db.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
         return row[0] if row else default
 
     def configure(self, **settings):
+        if 'stock_warning_limit' in settings:
+            limit = settings['stock_warning_limit']
+            if type(limit) is not int or not 0 <= limit <= MAX_UNITS:
+                raise ValueError('Informe um limite inteiro válido para o aviso de estoque.')
         with self.db:
             self.db.executemany('INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', [(key, str(value)) for key, value in settings.items()])
 

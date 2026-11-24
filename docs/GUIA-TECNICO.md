@@ -173,9 +173,9 @@ Após `sh scripts/empacotar-site.sh`, execute `sh scripts/publicar-github-pages.
 Na GNOME Software 51.1, o fluxo de abertura de um bundle local refina as informações básicas sem carregar as capturas antes da instalação. O repositório oficial evita depender desse fluxo: a loja recebe o catálogo completo da origem. A assinatura comprova a integridade relativamente à chave; não substitui auditoria do código ou certificação de terceiros.
 
 
-## Estoque opcional e fechamento — 0.5.0
+## Estoque opcional e fechamento
 
-Em Produtos, abra o cadastro ou a edição de um item e ative **Acompanhar quantidade**. Informe **Quantidade disponível** e **Avisar quando restarem** (padrão: 5 unidades). Produtos sem acompanhamento continuam funcionando como antes. Para repor, edite a quantidade para o saldo atual contado na loja; para desativar, desligue a opção e salve.
+Em Produtos, o campo **Quantidade disponível** começa vazio. Preencha para acompanhar o estoque; deixe vazio para não acompanhar. Zero registra um estoque zerado. Para repor, informe o saldo atual contado na loja. O aviso vale para todos os produtos com estoque: por padrão, aparece quando restam 5 unidades ou menos. Altere esse limite em **Preferências → Estoque**.
 
 A baixa de estoque e o registro da venda acontecem na mesma transação. Cancelar carrinho, abrir histórico, falhar na impressão ou reimprimir não desconta novamente. O aviso é exibido na janela e na lista de produtos. A venda não é bloqueada por falta de saldo; valores negativos ficam destacados para conferência.
 
