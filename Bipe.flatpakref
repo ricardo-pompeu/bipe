@@ -1,0 +1,10 @@
+[Flatpak Ref]
+Name=io.github.ricardo_pompeu.Bipe
+Branch=master
+Title=Bipe
+Comment=Um caixa simples para pequenos comércios
+Url=https://ricardo-pompeu.github.io/bipe/repo/
+SuggestRemoteName=bipe
+RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
+IsRuntime=false
+GPGKey=mDMEawTQ2RYJKwYBBAHaRw8BAQdAbQy2mlT5nCuczKSpt8svAxZPBvESykeSFiToDIo70hu0JUJpcGUgKGRpc3RyaWJ1aWNhbyBkZSBSaWNhcmRvIFBvbXBldSmImQQTFgoAQRYhBGxdFRx3sTLG9NGPwF9rn/4wmtvRBQJrBNDZAhsDBQkDwmcABQsJCAcCAiICBhUKCQgLAgQWAgMBAh4HAheAAAoJEF9rn/4wmtvR7GoA/RTvZsRNQj6TwaxXPdx2bx3ifNF4aPRZOMn3VLHOip95AQDV1RxXuLi8VaicIxaSqDerUjBN7b3vbYZd/L8ggEurDQ==
