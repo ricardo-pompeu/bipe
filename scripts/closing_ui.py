@@ -41,6 +41,7 @@ with tempfile.TemporaryDirectory() as temporary:
         assert window.stack.get_visible_child_name() == 'sell'
         window.stack.set_visible_child_name('closing')
         assert window.closing_sales_value.get_label() == '0'
+        assert window.closing_amount_value.get_label() == 'R$ 0,00'
         assert window.closing_product_list.get_first_child().get_title() == 'Nenhum produto vendido neste dia'
         theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
         assert theme.has_icon('document-open-recent-symbolic')
@@ -52,6 +53,7 @@ with tempfile.TemporaryDirectory() as temporary:
         window.stack.set_visible_child_name('sell')
         window.stack.set_visible_child_name('closing')
         assert window.closing_sales_value.get_label() == '2'
+        assert window.closing_amount_value.get_label() == 'R$ 15,00'
         assert window.closing_product_list.get_first_child().get_title() == '1. Arroz 1 kg'
         window.choose_closing_day()
         step(select_date)

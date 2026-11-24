@@ -75,3 +75,11 @@ As imagens ficam no repositório público bipe-media por autorização do manten
 A origem HTTPS do próprio repositório foi adicionada ao Flatpak com verificação GPG ativa. O catálogo foi baixado pelo Flatpak e interpretado pela API AppStream: três capturas foram selecionadas para o tamanho usado na loja. O novo caminho de instalação é Bipe.flatpakref, que usa o catálogo da origem, em vez do fluxo limitado de abertura de um bundle local. A geração do catálogo usa libappstream e librsvg no SDK.
 
 A suíte de 25 testes e a verificação de metadados dentro do pacote passaram. Os commits do aplicativo, o catálogo e o resumo do repositório são assinados. Os scripts de publicação não copiam a chave secreta; apenas os artefatos públicos são enviados à branch gh-pages.
+
+## Estoque opcional e valores no fechamento — 0.5.0
+
+36 testes cobrem estoque desativado por padrão, baixa somente ao concluir a venda, idempotência, aviso no limite escolhido, saldo negativo sem bloquear venda, reposição/desativação, rollback conjunto de venda e estoque, backup/restauração e migração do esquema 1 para o 2. O fechamento soma os preços históricos de cada venda, inclusive quando o produto teve preços diferentes no mesmo dia.
+
+Os testes gráficos stock_ui.py, closing_ui.py e acceptance_ui.py passaram com banco temporário e impressão substituída por um backend de teste. Conferiram o formulário opcional, baixa, aviso, reimpressão sem novo desconto, reposição, calendário e valores. O formulário foi renderizado e revisado com o botão Salvar fixo. As capturas da loja foram atualizadas com dados de demonstração.
+
+Uma migração adicional foi executada em cópia consistente do banco local: produtos, vendas, itens e preferências foram comparados antes e depois. O banco original não foi alterado nessa verificação.

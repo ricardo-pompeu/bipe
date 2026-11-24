@@ -71,6 +71,11 @@ class Window(Adw.ApplicationWindow):
             menu.append(title, 'win.' + action)
         header.pack_end(Gtk.MenuButton(icon_name='open-menu-symbolic', menu_model=menu, tooltip_text='Menu principal'))
         layout.append(header)
+        self.stock_banner = Adw.Banner()
+        self.stock_banner.set_use_markup(False)
+        self.stock_banner.set_button_label('Ver produtos')
+        self.stock_banner.connect('button-clicked', lambda *_: self.show_stock_products())
+        layout.append(self.stock_banner)
         layout.append(self.stack)
         self.stack.set_vexpand(True)
         self.build_sale()
@@ -161,16 +166,43 @@ class Window(Adw.ApplicationWindow):
     def refresh_products(self):
         clear_list(self.product_list)
         products = self.store.products(self.search.get_text())
+        products.sort(key=lambda p: 0 if p.stock is not None and p.stock <= p.low_stock else 1)
         self.products_empty.set_title('Nenhum produto encontrado' if self.search.get_text() else 'Seus produtos ficam aqui')
         self.product_views.set_visible_child_name('list' if products else 'empty')
         for product in products:
-            row = Adw.ActionRow(title=product.name, subtitle=product.barcode)
+            subtitle = product.barcode
+            if product.stock is not None:
+                subtitle += f' · Estoque: {product.stock} un.'
+                if product.stock < 0:
+                    subtitle += ' · Confira a quantidade'
+                elif product.stock <= product.low_stock:
+                    subtitle += ' · Poucas unidades'
+            row = Adw.ActionRow(title=product.name, subtitle=subtitle)
             row.set_use_markup(False)
             row.add_suffix(label(money(product.price)))
             edit = button('Editar produto', lambda p=product: self.product_dialog(product=p), icon='document-edit-symbolic')
             edit.set_valign(Gtk.Align.CENTER)
             row.add_suffix(edit)
+            if product.stock is not None and product.stock <= product.low_stock:
+                indicator = Gtk.Image(icon_name='dialog-warning-symbolic', tooltip_text='Quantidade baixa; confira o estoque')
+                indicator.add_css_class('warning')
+                row.add_prefix(indicator)
             self.product_list.append(row)
+        self.refresh_stock_warning()
+
+    def show_stock_products(self):
+        self.search.set_text('')
+        self.stack.set_visible_child_name('products')
+
+    def refresh_stock_warning(self):
+        products = self.store.low_stock_products()
+        self.stock_banner.set_revealed(bool(products))
+        if len(products) == 1:
+            product = products[0]
+            name = product.name if len(product.name) <= 45 else product.name[:44] + '…'
+            self.stock_banner.set_title(f'Confira o estoque: {name} ({product.stock} un.)')
+        elif products:
+            self.stock_banner.set_title(f'Confira o estoque de {len(products)} produtos.')
 
     def focus_scan(self):
         if not self.checkout_open and self.stack.get_visible_child_name() == 'sell':
@@ -236,31 +268,58 @@ class Window(Adw.ApplicationWindow):
         self.refresh_cart()
         self.focus_scan()
 
-    def form_dialog(self, title, width=460):
+    def form_dialog(self, title, width=460, scrollable=False):
         dialog = Adw.Dialog(title=title, content_width=width)
         body = box(0)
         header = Adw.HeaderBar()
         body.append(header)
         inner = margins(box(18), 24)
-        body.append(inner)
+        if scrollable:
+            body.append(Gtk.ScrolledWindow(child=inner, hscrollbar_policy=Gtk.PolicyType.NEVER,
+                                           propagate_natural_height=True, max_content_height=520))
+        else:
+            body.append(inner)
         dialog.set_child(body)
         return dialog, inner
 
     def product_dialog(self, barcode='', product=None, add=False):
-        dialog, inner = self.form_dialog('Editar produto' if product else 'Cadastrar produto')
+        dialog, inner = self.form_dialog('Editar produto' if product else 'Cadastrar produto', scrollable=True)
         group = Adw.PreferencesGroup()
         code = Adw.EntryRow(title='Código de barras', text=product.barcode if product else barcode)
         name = Adw.EntryRow(title='Nome do produto', text=product.name if product else '')
-        price = Adw.EntryRow(title='Preço de venda (R$)', text=f'{product.price / 100:.2f}'.replace('.', ',') if product else '')
+        price = Adw.EntryRow(title='Preço de venda (R$)', text=f'{product.price // 100},{product.price % 100:02d}' if product else '')
         price.set_input_purpose(Gtk.InputPurpose.NUMBER)
         for entry in (code, name, price):
             group.add(entry)
         inner.append(group)
+        stock_group = Adw.PreferencesGroup(title='Estoque (opcional)',
+            description='A quantidade diminui ao concluir uma venda. O aviso não impede vender.')
+        track = Adw.SwitchRow(title='Acompanhar quantidade', active=product is not None and product.stock is not None)
+        quantity = Adw.SpinRow(title='Quantidade disponível',
+            adjustment=Gtk.Adjustment(lower=-999999999, upper=999999999, step_increment=1, page_increment=10),
+            digits=0, numeric=True)
+        quantity.set_value(product.stock if product and product.stock is not None else 0)
+        threshold = Adw.SpinRow(title='Avisar quando restarem',
+            adjustment=Gtk.Adjustment(lower=0, upper=999999999, step_increment=1, page_increment=5),
+            digits=0, numeric=True)
+        threshold.set_value(product.low_stock if product else 5)
+        for row in (track, quantity, threshold):
+            stock_group.add(row)
+        def stock_visibility(*_):
+            quantity.set_visible(track.get_active())
+            threshold.set_visible(track.get_active())
+        track.connect('notify::active', stock_visibility)
+        stock_visibility()
+        inner.append(stock_group)
         error_label = label('', 'error', wrap=True)
-        inner.append(error_label)
+        error_label.set_visible(False)
         def save():
             try:
-                saved = self.store.save_product(code.get_text(), name.get_text(), parse_money(price.get_text()), product.id if product else None)
+                if track.get_active() and (not quantity.get_value().is_integer() or not threshold.get_value().is_integer()):
+                    raise ValueError('Informe quantidades inteiras, sem casas decimais.')
+                saved = self.store.save_product(code.get_text(), name.get_text(), parse_money(price.get_text()), product.id if product else None,
+                    stock=int(quantity.get_value()) if track.get_active() else None,
+                    low_stock=int(threshold.get_value()))
                 self.refresh_products()
                 if add:
                     self.add_product(saved)
@@ -268,8 +327,12 @@ class Window(Adw.ApplicationWindow):
                     self.notify('Produto salvo')
                 dialog.close()
             except (ValueError, sqlite3.Error) as error:
+                error_label.set_visible(True)
                 error_label.set_label(str(error) if isinstance(error, ValueError) else 'Não foi possível salvar. Verifique o espaço disponível e tente novamente.')
-        inner.append(button('Salvar e adicionar' if add else 'Salvar', save, 'suggested-action'))
+        footer = margins(box(8), 18)
+        footer.append(error_label)
+        footer.append(button('Salvar e adicionar' if add else 'Salvar', save, 'suggested-action'))
+        dialog.get_child().append(footer)
         code.connect('entry-activated', lambda *_: name.grab_focus())
         name.connect('entry-activated', lambda *_: price.grab_focus())
         price.connect('entry-activated', lambda *_: save())
@@ -331,6 +394,7 @@ class Window(Adw.ApplicationWindow):
             self.refresh_cart()
             dialog.close()
             self.refresh_closing()
+            self.refresh_products()
             self.notify(f'Venda {sale_id:06d} salva')
             self.show_receipt(sale_id, print_now=True)
         def closed(*_):
@@ -460,7 +524,11 @@ class Window(Adw.ApplicationWindow):
         self.closing_sales_value = label('', 'title-2')
         self.closing_sales.add_suffix(self.closing_sales_value)
         totals.add(self.closing_sales)
-        self.closing_products = Adw.PreferencesGroup(title='Produtos mais vendidos', description='Quantidade de unidades vendidas no dia.')
+        self.closing_amount = Adw.ActionRow(title='Total vendido no dia')
+        self.closing_amount_value = label(money(0), 'title-2')
+        self.closing_amount.add_suffix(self.closing_amount_value)
+        totals.add(self.closing_amount)
+        self.closing_products = Adw.PreferencesGroup(title='Produtos mais vendidos', description='Quantidades e valores registrados nas vendas do dia.')
         self.closing_product_list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.NONE)
         self.closing_product_list.add_css_class('boxed-list')
         self.closing_products.add(self.closing_product_list)
@@ -502,6 +570,7 @@ class Window(Adw.ApplicationWindow):
         self.closing_date_button.set_label('Hoje' if day == today else day.strftime('%d/%m/%Y'))
         summary = self.store.daily_summary(day.isoformat())
         self.closing_sales_value.set_label(str(summary['quantity']))
+        self.closing_amount_value.set_label(money(summary['total']))
         kinds, sales = len(summary['products']), summary['sales_count']
         product_text = 'produto' if kinds == 1 else 'produtos diferentes'
         sale_text = 'venda' if sales == 1 else 'vendas'
@@ -511,9 +580,11 @@ class Window(Adw.ApplicationWindow):
             empty = Adw.ActionRow(title='Nenhum produto vendido neste dia', subtitle='As vendas concluídas aparecerão aqui automaticamente.')
             self.closing_product_list.append(empty)
         for index, product in enumerate(summary['products'], 1):
-            row = Adw.ActionRow(title=f"{index}. {product['name']}")
+            calculation = ' + '.join(f'{quantity} × {money(price)}' for price, quantity in sorted(product['prices'].items()))
+            row = Adw.ActionRow(title=f"{index}. {product['name']}", subtitle=calculation)
             row.set_use_markup(False)
-            row.add_suffix(label(f"{product['quantity']} un."))
+            row.set_subtitle_lines(0)
+            row.add_suffix(label(money(product['total']), 'heading'))
             self.closing_product_list.append(row)
 
     def preferences(self):

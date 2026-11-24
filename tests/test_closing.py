@@ -35,7 +35,7 @@ class DailySummaryTest(unittest.TestCase):
         self.assertEqual(summary['day'], date.today().isoformat())
         self.assertEqual(summary['sales_count'], 3)
         self.assertEqual(summary['quantity'], 5)
-        self.assertEqual(summary['products'][0], {'name': 'Arroz 1 kg', 'quantity': 3})
+        self.assertEqual(summary['products'][0], {'name': 'Arroz 1 kg', 'quantity': 3, 'total': 2250, 'prices': {750: 3}})
 
     def test_day_isolation_and_historical_names(self):
         older = self.sell([self.rice])
@@ -69,3 +69,22 @@ class DailySummaryTest(unittest.TestCase):
         summary = self.store.daily_summary()
         self.assertEqual(summary['quantity'], 2)
         self.assertEqual(summary['sales_count'], 1)
+
+    def test_values_use_each_sale_price_instead_of_current_catalog(self):
+        self.sell([self.rice, self.rice])
+        updated = self.store.save_product('arroz', 'Arroz', 1000, self.rice.id)
+        self.sell([updated])
+        self.store.save_product('arroz', 'Arroz', 9999, self.rice.id)
+        summary = self.store.daily_summary()
+        self.assertEqual(summary['total'], 2500)
+        self.assertEqual(summary['products'][0]['total'], 2500)
+        self.assertEqual(summary['products'][0]['prices'], {750: 2, 1000: 1})
+
+    def test_total_matches_sales_and_respects_selected_day(self):
+        old = self.sell([self.beans])
+        with self.store.db:
+            self.store.db.execute('UPDATE sales SET created=? WHERE id=?', ('2000-01-01T12:00:00-03:00', old))
+        self.sell([self.rice, self.beans], 'Cartão')
+        self.assertEqual(self.store.daily_summary()['total'], 1640)
+        self.assertEqual(self.store.daily_summary('2000-01-01')['total'], 890)
+        self.assertEqual(self.store.daily_summary('2000-01-02')['total'], 0)

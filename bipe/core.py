@@ -11,6 +11,8 @@ import unicodedata
 import uuid
 
 MAX_CENTS = 999_999_999
+MAX_UNITS = 999_999_999
+UNSET = object()
 
 
 def money(cents):
@@ -45,6 +47,8 @@ class Product:
     barcode: str
     name: str
     price: int
+    stock: int | None = None
+    low_stock: int = 5
 
 
 @dataclass
@@ -116,6 +120,15 @@ PRAGMA user_version=1;
 '''
 
 
+MIGRATION_2 = '''
+ALTER TABLE products ADD COLUMN stock INTEGER
+ CHECK(stock IS NULL OR (typeof(stock)='integer' AND stock BETWEEN -999999999 AND 999999999));
+ALTER TABLE products ADD COLUMN low_stock INTEGER NOT NULL DEFAULT 5
+ CHECK(typeof(low_stock)='integer' AND low_stock BETWEEN 0 AND 999999999);
+PRAGMA user_version=2;
+'''
+
+
 class Store:
     def __init__(self, path):
         self.path = Path(path)
@@ -126,14 +139,19 @@ class Store:
         self.db.execute('PRAGMA busy_timeout=5000')
         try:
             version = self.db.execute('PRAGMA user_version').fetchone()[0]
+            fresh = version == 0
             if version == 0:
                 if self.db.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchone():
                     raise ValueError('Este arquivo não é um banco do Bipe.')
                 self.db.executescript('BEGIN IMMEDIATE;\n' + SCHEMA + '\nCOMMIT;')
-            elif version != 1:
+            elif version not in (1, 2):
                 raise ValueError('Este banco precisa de uma versão mais recente do Bipe.')
             if self.db.execute('PRAGMA quick_check').fetchone()[0] != 'ok':
                 raise ValueError('Não foi possível verificar seus dados. Restaure um backup.')
+            if version in (0, 1):
+                if not fresh:
+                    self.backup(self.path.parent / ('antes-estoque-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '.sqlite3'))
+                self.db.executescript('BEGIN IMMEDIATE;\n' + MIGRATION_2 + '\nCOMMIT;')
             self.db.execute('PRAGMA journal_mode=WAL')
             self.db.execute('PRAGMA synchronous=FULL')
             os.chmod(self.path, 0o600)
@@ -153,7 +171,7 @@ class Store:
         rows = self.db.execute('SELECT * FROM products ORDER BY name COLLATE NOCASE')
         return [Product(**dict(row)) for row in rows if needle in normalized(row['name']) or needle in normalized(row['barcode'])]
 
-    def save_product(self, barcode, name, price, product_id=None):
+    def save_product(self, barcode, name, price, product_id=None, *, stock=UNSET, low_stock=UNSET):
         barcode, name = barcode.strip(), name.strip()
         if not barcode or len(barcode) > 200 or any(ord(c) < 32 for c in barcode):
             raise ValueError('Informe um código de barras válido, com até 200 caracteres.')
@@ -161,15 +179,30 @@ class Store:
             raise ValueError('Informe um nome com até 200 caracteres.')
         if type(price) is not int or not 0 < price <= MAX_CENTS:
             raise ValueError('O preço deve ser maior que zero.')
+        existing = self.db.execute('SELECT stock,low_stock FROM products WHERE id=?', (product_id,)).fetchone() if product_id is not None else None
+        if product_id is not None and existing is None:
+            raise ValueError('Produto não encontrado.')
+        if stock is UNSET:
+            stock = existing['stock'] if existing else None
+        if low_stock is UNSET:
+            low_stock = existing['low_stock'] if existing else 5
+        if stock is not None and (type(stock) is not int or not -MAX_UNITS <= stock <= MAX_UNITS):
+            raise ValueError('Informe uma quantidade inteira válida.')
+        if type(low_stock) is not int or not 0 <= low_stock <= MAX_UNITS:
+            raise ValueError('Informe um limite de aviso válido.')
         try:
             with self.db:
                 if product_id is None:
-                    self.db.execute('INSERT INTO products(barcode,name,price) VALUES(?,?,?)', (barcode, name, price))
+                    self.db.execute('INSERT INTO products(barcode,name,price,stock,low_stock) VALUES(?,?,?,?,?)', (barcode, name, price, stock, low_stock))
                 else:
-                    self.db.execute('UPDATE products SET barcode=?,name=?,price=? WHERE id=?', (barcode, name, price, product_id))
+                    self.db.execute('UPDATE products SET barcode=?,name=?,price=?,stock=?,low_stock=? WHERE id=?', (barcode, name, price, stock, low_stock, product_id))
         except sqlite3.IntegrityError:
             raise ValueError('Este código já está cadastrado. Procure o produto na lista.') from None
         return self.product(barcode)
+
+    def low_stock_products(self):
+        return [Product(**dict(row)) for row in self.db.execute(
+            'SELECT * FROM products WHERE stock IS NOT NULL AND stock<=low_stock ORDER BY stock,name COLLATE NOCASE')]
 
     def get(self, key, default=''):
         row = self.db.execute('SELECT value FROM settings WHERE key=?', (key,)).fetchone()
@@ -200,6 +233,8 @@ class Store:
             sale_id = cur.lastrowid
             self.db.executemany('INSERT INTO sale_items(sale_id,product_id,name,price,quantity) VALUES(?,?,?,?,?)',
                 [(sale_id, item.product_id, item.name, item.price, item.quantity) for item in cart.items.values()])
+            self.db.executemany('UPDATE products SET stock=stock-? WHERE id=? AND stock IS NOT NULL',
+                                [(item.quantity, item.product_id) for item in cart.items.values()])
         return sale_id
 
     def sale(self, sale_id):
@@ -219,16 +254,18 @@ class Store:
         count = self.db.execute('SELECT COUNT(*) FROM sales WHERE substr(created,1,10)=?', (day,)).fetchone()[0]
         products = {}
         rows = self.db.execute("""
-            SELECT i.product_id, i.name, i.quantity
+            SELECT i.product_id, i.name, i.quantity, i.price
             FROM sale_items i JOIN sales s ON s.id=i.sale_id
             WHERE substr(s.created,1,10)=? ORDER BY s.created DESC, i.id DESC
         """, (day,))
         for row in rows:
             key = ('id', row['product_id']) if row['product_id'] is not None else ('name', row['name'])
-            product = products.setdefault(key, {'name': row['name'], 'quantity': 0})
+            product = products.setdefault(key, {'name': row['name'], 'quantity': 0, 'total': 0, 'prices': {}})
             product['quantity'] += row['quantity']
+            product['total'] += row['quantity'] * row['price']
+            product['prices'][row['price']] = product['prices'].get(row['price'], 0) + row['quantity']
         ranking = sorted(products.values(), key=lambda item: (-item['quantity'], normalized(item['name'])))
-        return {'day': day, 'sales_count': count, 'quantity': sum(p['quantity'] for p in ranking), 'products': ranking}
+        return {'day': day, 'sales_count': count, 'total': sum(p['total'] for p in ranking), 'quantity': sum(p['quantity'] for p in ranking), 'products': ranking}
 
     def backup(self, destination):
         destination = Path(destination)
@@ -258,15 +295,23 @@ class Store:
             raise ValueError('Escolha uma cópia de segurança exportada.')
         with closing(sqlite3.connect(source.resolve().as_uri() + '?mode=ro', uri=True)) as backup:
             self.validate_backup(backup)
-            self.auto_backup()  # Sempre preservar o estado anterior à restauração.
-            backup.backup(self.db)
+            with closing(sqlite3.connect(':memory:')) as prepared:
+                backup.backup(prepared)
+                if prepared.execute('PRAGMA user_version').fetchone()[0] == 1:
+                    prepared.executescript('BEGIN IMMEDIATE;\n' + MIGRATION_2 + '\nCOMMIT;')
+                self.validate_backup(prepared)
+                self.auto_backup()
+                prepared.backup(self.db)
         self.db.execute('PRAGMA foreign_keys=ON')
 
     @staticmethod
     def validate_backup(db):
-        if db.execute('PRAGMA integrity_check').fetchone()[0] != 'ok' or db.execute('PRAGMA user_version').fetchone()[0] != 1:
+        version = db.execute('PRAGMA user_version').fetchone()[0]
+        if db.execute('PRAGMA integrity_check').fetchone()[0] != 'ok' or version not in (1, 2):
             raise ValueError('Este arquivo não é um backup válido do Bipe.')
         expected = {'products': {'id','barcode','name','price'}, 'sales': {'id','token','created','total','payment','received','change_value','store','footer'}, 'sale_items': {'id','sale_id','product_id','name','price','quantity'}, 'settings': {'key','value'}}
+        if version == 2:
+            expected['products'].update({'stock','low_stock'})
         for table, columns in expected.items():
             if {r[1] for r in db.execute(f'PRAGMA table_info({table})')} != columns:
                 raise ValueError('O backup está incompleto ou é incompatível.')

@@ -114,7 +114,7 @@ Veja [TESTES.md](../TESTES.md) para verificações executadas e roteiro de teste
 
 O banco é resolvido por `GLib.get_user_data_dir()/io.github.ricardo_pompeu.Bipe/caixa.sqlite3`. Na instalação tradicional costuma ficar em `~/.local/share/io.github.ricardo_pompeu.Bipe/`; no Flatpak, dentro do diretório persistente da aplicação. Não fica no código-fonte nem na instalação. PDFs de trabalho ficam no cache e são regenerados a partir do histórico.
 
-Os valores são inteiros em centavos, com transações, chaves estrangeiras, WAL, sincronização FULL, restrições e versão de migração (`user_version=1`). O token único por carrinho impede registrar duas vezes a mesma conclusão. Nomes, preços, loja e rodapé são preservados no momento da venda.
+Os valores são inteiros em centavos, com transações, chaves estrangeiras, WAL, sincronização FULL, restrições e versão de migração (`user_version=2`). O token único por carrinho impede registrar duas vezes a mesma conclusão. Nomes, preços, loja e rodapé são preservados no momento da venda.
 
 São feitas cópias consistentes pela API SQLite ao abrir, a cada 15 minutos, ao encerrar e antes de restaurar; ficam em `backups/`, ao lado do banco, limitadas às dez últimas. Para proteger contra falha do computador, use **Exportar backup** e guarde em outro dispositivo.
 
@@ -171,3 +171,14 @@ Endereço oficial: `https://ricardo-pompeu.github.io/bipe/`. O arquivo `Bipe.fla
 Após `sh scripts/empacotar-site.sh`, execute `sh scripts/publicar-github-pages.sh` para publicar os arquivos gerados em `dist/github-pages/`. O script mantém os objetos anteriores, adiciona os novos e atualiza a branch gh-pages. O GitHub Pages deve estar configurado para publicar a raiz dessa branch. A chave secreta nunca é copiada para essa pasta nem para o GitHub.
 
 Na GNOME Software 51.1, o fluxo de abertura de um bundle local refina as informações básicas sem carregar as capturas antes da instalação. O repositório oficial evita depender desse fluxo: a loja recebe o catálogo completo da origem. A assinatura comprova a integridade relativamente à chave; não substitui auditoria do código ou certificação de terceiros.
+
+
+## Estoque opcional e fechamento — 0.5.0
+
+Em Produtos, abra o cadastro ou a edição de um item e ative **Acompanhar quantidade**. Informe **Quantidade disponível** e **Avisar quando restarem** (padrão: 5 unidades). Produtos sem acompanhamento continuam funcionando como antes. Para repor, edite a quantidade para o saldo atual contado na loja; para desativar, desligue a opção e salve.
+
+A baixa de estoque e o registro da venda acontecem na mesma transação. Cancelar carrinho, abrir histórico, falhar na impressão ou reimprimir não desconta novamente. O aviso é exibido na janela e na lista de produtos. A venda não é bloqueada por falta de saldo; valores negativos ficam destacados para conferência.
+
+O fechamento calcula cada valor com quantidade × preço registrado na venda, em centavos. Se um produto teve preços diferentes no mesmo dia, a linha apresenta a composição por preço e o valor acumulado. O total do dia soma esses valores; não usa o preço atual do cadastro.
+
+A atualização migra o banco para a versão 2. Produtos antigos começam com o estoque desativado, pois não há como adivinhar a quantidade física disponível. Antes de migrar um banco existente, o programa salva uma cópia consistente em um arquivo antes-estoque-…sqlite3, ao lado do banco. Backups da versão anterior continuam aceitos e são preparados no novo formato antes da restauração. Após atualizar, use uma versão 0.5.0 ou mais recente para abrir os dados.
