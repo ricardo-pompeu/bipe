@@ -11,7 +11,13 @@ work=$(mktemp -d /tmp/bipe-release.XXXXXX)
 # O caminho oficial nunca reconstrói depois da revisão.
 : "${BIPE_CANDIDATE_BUNDLE:?Use scripts/promover-candidato.py RUN_ID SHA256_APROVADO}"
 : "${BIPE_REVIEW_FILE:?Falta o registro de revisão do candidato}"
-ostree --repo="$work/repo" init --mode=archive
+/usr/bin/python3 - "$work/repo" <<'INIT'
+import sys,gi
+gi.require_version('OSTree','1.0')
+from gi.repository import OSTree,Gio
+repo=OSTree.Repo.new(Gio.File.new_for_path(sys.argv[1]))
+repo.create(OSTree.RepoMode.ARCHIVE,None)
+INIT
 flatpak build-import-bundle --gpg-sign="$BIPE_GPG_KEY" --gpg-homedir="$BIPE_GPG_HOMEDIR" "$work/repo" "$BIPE_CANDIDATE_BUNDLE"
 gpg --homedir "$BIPE_GPG_HOMEDIR" --batch --export "$BIPE_GPG_KEY" > "$work/public-key.gpg"
 flatpak build-bundle --repo-url=https://ricardo-pompeu.github.io/bipe/repo/ --gpg-keys="$work/public-key.gpg" --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo "$work/repo" "$root/Bipe.flatpak" io.github.ricardo_pompeu.Bipe master
