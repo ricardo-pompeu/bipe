@@ -1,0 +1,10 @@
+{
+  "kind": "infrastructure-bootstrap",
+  "infrastructure_commit": "2db78258c88d4ebec1a64e6aaaf7e2cd7cfd7ebe",
+  "application_commit": "7aa1f5ea9d11c7e61f0f2028f0bd71f1dc01fc8d822652486ed4104c88c351e2",
+  "application_version": "0.6.2",
+  "application_source_commit": "241d3329379255168f6f0301506a1da57527646f",
+  "candidate_validation_run": "45723433146",
+  "decision": "pending-production-approval",
+  "note": "Preserva o pacote e todas as refs da origem atual; adiciona apenas registro e manifesto assinado da infraestrutura."
+}
