@@ -14,6 +14,13 @@ work=$(mktemp -d /tmp/bipe-release.XXXXXX)
 flatpak build-import-bundle --gpg-sign="$BIPE_GPG_KEY" --gpg-homedir="$BIPE_GPG_HOMEDIR" "$work/repo" "$BIPE_CANDIDATE_BUNDLE"
 gpg --homedir "$BIPE_GPG_HOMEDIR" --batch --export "$BIPE_GPG_KEY" > "$work/public-key.gpg"
 flatpak build-bundle --repo-url=https://ricardo-pompeu.github.io/bipe/repo/ --gpg-keys="$work/public-key.gpg" --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo "$work/repo" "$root/Bipe.flatpak" io.github.ricardo_pompeu.Bipe master
+/usr/bin/python3 - "$BIPE_CANDIDATE_BUNDLE" "$root/Bipe.flatpak" <<'COMMIT'
+import sys,gi
+gi.require_version('Flatpak','1.0')
+from gi.repository import Flatpak,Gio
+before,after=[Flatpak.BundleRef.new(Gio.File.new_for_path(path)) for path in sys.argv[1:]]
+assert before.get_commit()==after.get_commit(), 'O conteúdo mudou depois da revisão.'
+COMMIT
 /usr/bin/python3 "$root/scripts/verificar-bundle.py" "$root/Bipe.flatpak"
 out="$root/dist"
 mkdir -p "$out" "$work/Bipe-POS80"
@@ -42,9 +49,13 @@ COPY
 sh "$root/scripts/preparar-github-pages.sh" "$work/repo" "$out/github-pages"
 cp "$BIPE_REVIEW_FILE" "$out/github-pages/review.json"
 python3 - "$out/github-pages" <<'HASH'
-import hashlib,sys
+import hashlib,sys,shutil
 from pathlib import Path
 root=Path(sys.argv[1])
+# Arquivos internos mutáveis do OSTree não são conteúdo distribuído.
+(root/'repo/.lock').unlink(missing_ok=True)
+for folder in ('repo/tmp','repo/state'):
+    if (root/folder).exists(): shutil.rmtree(root/folder)
 # Descarta comprovantes anteriores antes de gerar o novo manifesto completo.
 for name in ('PUBLICATION.sha256','PUBLICATION.sha256.asc'):
     (root/name).unlink(missing_ok=True)
