@@ -26,7 +26,7 @@ Se você usa o kit POS-80, extraia a nova cópia e execute `sh instalar-bipe.sh`
 
 ### Preparar uma versão para o botão Baixar
 
-Execute `sh scripts/empacotar-site.sh` no ambiente de desenvolvimento com o SDK GNOME 50 instalado. O comando constrói o Flatpak, executa os testes e gera em `dist/`:
+Para a distribuição oficial, siga [Distribuição segura](DISTRIBUICAO-SEGURA.md). O candidato é construído e testado no CI; `scripts/promover-candidato.py` verifica e assina esse conteúdo, gerando em `dist/`:
 
 - `Bipe.flatpak`: arquivo para instalar ou atualizar.
 - `Bipe-POS80-linux-x86_64.tar.gz`: kit completo para o aplicativo e a impressora.
@@ -168,7 +168,7 @@ A chave secreta fica em `~/.local/share/bipe-release-signing`, fora do projeto, 
 
 Endereço oficial: `https://ricardo-pompeu.github.io/bipe/`. O arquivo `Bipe.flatpakref` adiciona o catálogo ao fluxo de instalação da loja. O `Bipe.flatpakrepo` contém a chave pública. Tanto os commits do aplicativo quanto o resumo e os catálogos são assinados com a chave de distribuição.
 
-Após `sh scripts/empacotar-site.sh`, execute `sh scripts/publicar-github-pages.sh` para publicar os arquivos gerados em `dist/github-pages/`. O script mantém os objetos anteriores, adiciona os novos e atualiza a branch gh-pages. O GitHub Pages deve estar configurado para publicar a raiz dessa branch. A chave secreta nunca é copiada para essa pasta nem para o GitHub.
+Após revisar e assinar o candidato com `scripts/promover-candidato.py`, execute `sh scripts/publicar-github-pages.sh`. O script preserva os objetos anteriores, envia o catálogo assinado a gh-pages e solicita o workflow de publicação. O GitHub Pages usa GitHub Actions: a aprovação do ambiente github-pages é obrigatória antes de servir o catálogo verificado. A chave secreta nunca é copiada para essa pasta nem para o GitHub.
 
 Na GNOME Software 51.1, o fluxo de abertura de um bundle local refina as informações básicas sem carregar as capturas antes da instalação. O repositório oficial evita depender desse fluxo: a loja recebe o catálogo completo da origem. A assinatura comprova a integridade relativamente à chave; não substitui auditoria do código ou certificação de terceiros.
 

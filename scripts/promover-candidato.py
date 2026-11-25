@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 """Assinatura local de candidato do CI. Não executa código contido no candidato."""
+import ast
 import hashlib
 import json
 import os
@@ -34,8 +35,10 @@ def main():
         assert not bundle.is_symlink() and bundle.is_file()
         assert hashlib.sha256(bundle.read_bytes()).hexdigest() == expected == data['bundle_sha256']
         assert data['source_commit'] == head and str(data['run_id']) == run and data['repository'] == REPOSITORY
-        from bipe import VERSION
-        assert data['version'] == VERSION
+        # Leia a versão como dado; não importe código do aplicativo no assinador.
+        tree = ast.parse((root/'bipe/__init__.py').read_text())
+        version = next(ast.literal_eval(node.value) for node in tree.body if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == 'VERSION' for target in node.targets))
+        assert data['version'] == version
         data['reviewer'] = output('gh','api','user','--jq','.login')
         data['decision'] = 'approved-for-signing'
         (folder/'review.json').write_text(json.dumps(data,indent=2)+'\n')
