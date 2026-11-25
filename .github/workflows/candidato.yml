@@ -15,7 +15,7 @@ jobs:
       - name: Preparar ferramentas
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak python3-gi gir1.2-flatpak-1.0
+          sudo apt-get install -y flatpak python3-gi gir1.2-flatpak-1.0 librsvg2-common
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
           flatpak install --user --noninteractive flathub org.gnome.Sdk//50 org.gnome.Platform//50
