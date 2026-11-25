@@ -1,0 +1,19 @@
+name: Verificar alterações
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  testes:
+    name: Testes e política
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y python3-gi python3-cairo gir1.2-pango-1.0
+      - run: /usr/bin/python3 -m unittest discover -s tests -v
+      - run: /usr/bin/python3 scripts/verificar-politica.py

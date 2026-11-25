@@ -8,3 +8,5 @@ flatpak-repo/
 CaixaSimples-POS80-linux-x86_64.tar.gz
 Bipe-POS80-linux-x86_64.tar.gz
 dist/
+
+candidate/

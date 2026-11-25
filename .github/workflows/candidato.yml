@@ -1,0 +1,31 @@
+name: Construir candidato
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidato:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Preparar ferramentas
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak python3-gi gir1.2-flatpak-1.0
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive flathub org.gnome.Sdk//50 org.gnome.Platform//50
+      - name: Construir e identificar candidato sem chave de assinatura
+        run: sh scripts/gerar-candidato.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: candidato-bipe
+          path: candidate/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Informações para revisão
+        run: cat candidate/candidate.json >> "$GITHUB_STEP_SUMMARY"

@@ -182,3 +182,7 @@ A baixa de estoque e o registro da venda acontecem na mesma transação. Cancela
 O fechamento calcula cada valor com quantidade × preço registrado na venda, em centavos. Se um produto teve preços diferentes no mesmo dia, a linha apresenta a composição por preço e o valor acumulado. O total do dia soma esses valores; não usa o preço atual do cadastro.
 
 A atualização migra o banco para a versão 2. Produtos antigos começam com o estoque desativado, pois não há como adivinhar a quantidade física disponível. Antes de migrar um banco existente, o programa salva uma cópia consistente em um arquivo antes-estoque-…sqlite3, ao lado do banco. Backups da versão anterior continuam aceitos e são preparados no novo formato antes da restauração. Após atualizar, use uma versão 0.5.0 ou mais recente para abrir os dados.
+
+## Publicação com revisão
+
+O empacotamento oficial agora exige candidato do CI e aprovação de publicação. Siga [Distribuição segura](DISTRIBUICAO-SEGURA.md); não execute o antigo empacotamento direto para uma atualização oficial.

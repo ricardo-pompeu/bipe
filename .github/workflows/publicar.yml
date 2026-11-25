@@ -1,0 +1,52 @@
+name: Publicar catálogo aprovado
+on:
+  workflow_dispatch:
+    inputs:
+      distribution_commit:
+        description: Commit exato do catálogo assinado em gh-pages
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: catalogo-producao
+  cancel-in-progress: false
+jobs:
+  verificar:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Validar identificador
+        env:
+          DISTRIBUTION_COMMIT: ${{ inputs.distribution_commit }}
+        run: '[[ "$DISTRIBUTION_COMMIT" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.distribution_commit }}
+          path: site
+          persist-credentials: false
+      - name: Verificar assinatura e integridade de todos os arquivos
+        run: |
+          /usr/bin/python3 scripts/verificar-publicacao.py site security/Bipe-signing-key.asc
+          cat site/review.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: site
+  publicar:
+    needs: verificar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Publicar somente o artefato já verificado
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
