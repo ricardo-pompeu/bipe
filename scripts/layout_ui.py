@@ -29,7 +29,19 @@ with tempfile.TemporaryDirectory(prefix='bipe-layout-') as temporary:
         w = app.get_active_window()
         w.store.save_product('test', 'Produto de teste', 750, stock=5)
         w.refresh_products()
-        assert Gtk.IconTheme.get_for_display(w.get_display()).has_icon('dialog-warning-symbolic')
+        assert Gtk.IconTheme.get_for_display(w.get_display()).has_icon('round-exclamation-symbolic')
+        assert Gtk.IconTheme.get_for_display(w.get_display()).has_icon('shopping-cart-symbolic')
+        assert w.finish.has_css_class('pill')
+        w.set_default_size(850, 720)
+        step(intro)
+    def intro():
+        capture('intro')
+        app.get_active_window().stack.set_visible_child_name('products')
+        step(products)
+    def products():
+        capture('stock')
+        w = app.get_active_window()
+        w.stack.set_visible_child_name('sell')
         w.set_default_size(850, 490)
         step(empty)
     def check(name):
@@ -40,6 +52,9 @@ with tempfile.TemporaryDirectory(prefix='bipe-layout-') as temporary:
             assert ok and bounds.get_y() >= 0 and bounds.get_y() + bounds.get_height() <= w.get_height(), (name, widget, bounds)
             assert bounds.get_height() >= 20
         assert w.cart_views.get_height() >= 50
+        capture(name)
+    def capture(name):
+        w = app.get_active_window()
         snapshot = Gtk.Snapshot()
         Gtk.WidgetPaintable.new(w).snapshot(snapshot, w.get_width(), w.get_height())
         texture = w.get_renderer().render_texture(snapshot.to_node(), None)
