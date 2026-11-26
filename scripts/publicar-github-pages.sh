@@ -12,6 +12,8 @@ if command -v gh >/dev/null 2>&1; then
     git -C "$stage" config credential.https://github.com.helper '!gh auth git-credential'
 fi
 cp -a "$site/." "$stage/"
+# Verifique o snapshot Git exato, inclusive eventuais sobras do histórico.
+python3 "$root/scripts/verificar-publicacao.py" "$stage" "$root/security/Bipe-signing-key.asc"
 git -C "$stage" add .
 if git -C "$stage" diff --cached --quiet; then
     echo 'Os arquivos já estão publicados.'
