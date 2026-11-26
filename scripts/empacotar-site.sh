@@ -54,6 +54,20 @@ for path in source.iterdir():
     else: shutil.copy2(path,target/path.name)
 COPY
 sh "$root/scripts/preparar-github-pages.sh" "$work/repo" "$out/github-pages"
+# build-update-repo pode remover caches de summaries. Preserve também os antigos
+# antes de assinar, pois o commit público continua a servi-los a downloads em andamento.
+python3 - "$work/previous" "$out/github-pages" <<'PRESERVE'
+import shutil,sys
+from pathlib import Path
+source,target=map(Path,sys.argv[1:])
+for path in source.rglob('*'):
+    relative=path.relative_to(source)
+    if '.git' in relative.parts: continue
+    destination=target/relative
+    if path.is_file() and not destination.exists():
+        destination.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(path,destination)
+PRESERVE
 cp "$BIPE_REVIEW_FILE" "$out/github-pages/review.json"
 python3 - "$out/github-pages" <<'HASH'
 import hashlib,sys,shutil
