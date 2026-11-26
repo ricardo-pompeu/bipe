@@ -1,10 +1,11 @@
 {
-  "kind": "infrastructure-bootstrap",
-  "infrastructure_commit": "2db78258c88d4ebec1a64e6aaaf7e2cd7cfd7ebe",
-  "application_commit": "7aa1f5ea9d11c7e61f0f2028f0bd71f1dc01fc8d822652486ed4104c88c351e2",
-  "application_version": "0.6.2",
-  "application_source_commit": "241d3329379255168f6f0301506a1da57527646f",
-  "candidate_validation_run": "45723433146",
-  "decision": "pending-production-approval",
-  "note": "Preserva o pacote e todas as refs da origem atual; adiciona apenas registro e manifesto assinado da infraestrutura."
+  "repository": "ricardo-pompeu/bipe",
+  "run_id": "45728970139",
+  "source_commit": "3518dfe3261644f19eb4d08a163ee8e08065ec4c",
+  "version": "0.6.3",
+  "sdk_commit": "cd563444e321f8e8dd90a3b8195d6a7c8c6d92bb2868872420a1d460e4665502",
+  "runtime_commit": "ac43a2a40ddb855048f7d8e42c1cfd6ae2d0ad7d88b09939f5dc371a3735f464",
+  "bundle_sha256": "f7e17c4cc4a210880f1c3dfeadce6d54afd336835cff2a979fd93ba1c32afcc9",
+  "reviewer": "ricardo-pompeu",
+  "decision": "approved-for-signing"
 }
